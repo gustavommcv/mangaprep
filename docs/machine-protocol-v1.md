@@ -24,8 +24,8 @@ require an exact supported protocol version and separately verify the release ve
 ## Conversion stream
 
 ```text
-mangapress <input> --profile KV --output <book.epub> --json-events
-mangapress <input> --profile KV --output <book.epub> --dry-run --json-events
+mangapress <input> --profile KV --format epub --output <book.epub> --json-events
+mangapress <input> --profile KV --format epub --output <book.epub> --dry-run --json-events
 ```
 
 The stream contains these event types:
