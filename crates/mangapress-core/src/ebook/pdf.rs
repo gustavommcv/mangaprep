@@ -9,10 +9,10 @@
 //! `printpdf`'s `RawImage::from_dynamic_image()` accepts an already-decoded
 //! image directly, so each page only needs decoding once (there is no
 //! bytes -> `RawImage` -> re-encode round trip). A `DynamicImage` is always
-//! normalized to `Luma8` before that call regardless of what the decoder
-//! produced — this pipeline only ever writes grayscale pages, but forcing
-//! it explicitly avoids depending on JPEG/PNG round-tripping through the
-//! `image` crate always preserving the original color type.
+//! normalized to `Luma8` for grayscale pages or `Rgb8` for color pages before
+//! that call. Color output is supported; normalization avoids depending on
+//! JPEG/PNG round-tripping through the `image` crate always preserving the
+//! original color type.
 //!
 //! Placing an image at exactly 1 pixel = 1 point (rather than printpdf's
 //! own default of 1 pixel = 1/300 inch) needs `XObjectTransform`'s `dpi`
