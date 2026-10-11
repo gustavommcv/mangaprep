@@ -51,11 +51,11 @@ manually rather than bypassing verification.
 To select a published version, set `MANGAPRESS_VERSION` (with or without its `v` prefix):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.7.4 sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.0 sh
 ```
 
 ```powershell
-$env:MANGAPRESS_VERSION = 'v0.7.4'
+$env:MANGAPRESS_VERSION = 'v0.8.0'
 irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
 ```
 
@@ -85,10 +85,10 @@ and included notices, not the folder itself. For a Cargo installation, run
 
 ## Usage
 
-Convert a volume for the Kindle 11 screen:
+Convert a volume for the Kindle 11 screen, using the default CBZ format:
 
 ```sh
-mangapress "Volume 1.cbz" --profile K11 --format epub --output "Books/Volume 1.epub"
+mangapress "Volume 1.cbz" --profile K11 --output "Books/Volume 1.cbz"
 ```
 
 Missing output folders are created automatically. Input can be a CBZ, a folder
@@ -111,6 +111,11 @@ Existing files are never replaced, even with an explicit output file: a suffix s
 ` (mangapress)` is added instead, and the command reports the path used.
 Choose a format supported by your reading app: a Kindle profile sets screen dimensions but
 does not create MOBI or AZW3 files for the Kindle's native reader.
+
+Since 0.8.0, Kindle profiles default to CBZ, suitable for KOReader. Choose `--format epub`
+for EPUB chapter navigation and resolved book metadata; reMarkable still defaults to PDF,
+and Kobo/`OTHER` to EPUB. With `--nested-toc`, automatic selection uses EPUB on every profile.
+Explicit CBZ or PDF with `--nested-toc` is refused.
 
 List device profiles, or preview the chapters, metadata, and output path before converting:
 

@@ -14,14 +14,24 @@ Only the publication job has repository write permission. It downloads the `mang
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
 
-## 0.7.4
+## 0.8.0
 
-This patch release contains the input, ordering, metadata, and encoding fixes merged since
-0.7.3, followed by the behavior-preserving module refactor. It adds no new CLI flags or output
-formats; automatic format selection and JSON protocol version 1 are unchanged.
+This release contains the input, ordering, metadata, and encoding fixes merged since 0.7.3,
+the behavior-preserving module refactor, and the KOReader EPUB wrapper correction.
+It intentionally changes automatic Kindle output to CBZ. Explicit formats and JSON protocol
+version 1 remain available unchanged; no CLI flags or supported output formats were removed.
 
 Release highlights:
 
+- Make `--format auto` (including omitting `--format`) select CBZ for every Kindle profile.
+  reMarkable still selects PDF, and Kobo/`OTHER` select EPUB. Use `--format epub` to keep
+  EPUB output, chapter navigation, and resolved book metadata. CBZ does not generate
+  chapter navigation or metadata; `--keepcomicinfo` can retain source ComicInfo unchanged.
+- With `--nested-toc` and automatic format selection, produce EPUB on every profile,
+  including older Kindles and reMarkable. Explicit CBZ/PDF with `--nested-toc` is still refused.
+- Remove extra line height below page images in EPUB. KOReader's engine tests show that this
+  closes the baseline gap while preserving proportions. It does not override the reader's
+  margins or status bar; other readers and physical devices were not tested for this correction.
 - Read CBZs with a single enclosing folder as the book they contain, including their metadata.
   Process a folder's own pages before its chapter subfolders, and use the book title for
   navigation entries that refer to pages directly in the book.
@@ -39,12 +49,13 @@ Release highlights:
 [ADR 0020](adr/0020-follow-kcc-on-the-differences-left-open.md) and
 [ADR 0021](adr/0021-write-jpeg-pages-as-libjpeg-does.md) record the compatibility and encoding
 decisions; [ADR 0022](adr/0022-behavior-preserving-module-layout.md) records the refactor.
+[ADR 0023](adr/0023-no-line-height-around-a-page-image.md) records the wrapper correction,
+and [ADR 0024](adr/0024-auto-format-is-cbz.md) records automatic format selection.
 The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit
 before publication, including extended comparisons and complete-book EPUB conformance.
 
-The independent KOReader page-wrapper correction and the proposal to make every Kindle
-profile default to CBZ remain outside this release. Mangabound's pinned toolchain will be
-updated separately; publishing this CLI release does not change the desktop application.
+Mangabound's pinned toolchain will be updated separately; publishing this CLI release does not
+change the desktop application, which passes an explicit format.
 
 ## 0.7.3 (2026-10-08)
 
