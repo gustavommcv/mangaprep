@@ -21,7 +21,9 @@ python tools/parity/books.py --kcc ../kcc-reference
 
 Sorting and filename sanitization use real `natsort` and `python-slugify` dependencies. Only
 unused PDF and MozJPEG imports have substitutes; neither feature is exercised. The full GUI
-dependency set and external archive tools are not required. A failing comparison exits nonzero.
+dependency set is not required. For the CLI-to-book CBZ cases, install 7-Zip and make it available
+on `PATH`: KCC's archive extractor needs it. The page-only matrix does not need that extractor.
+A failing comparison exits nonzero.
 
 - `--profile CODE` selects a built-in device profile; the default is `K11`.
 - `--smoke` runs three representative scenarios: default processing, CBZ padding, and color
@@ -137,6 +139,10 @@ See the coverage map for other gaps and
 [ADR 0013](../../docs/adr/0013-follow-a-named-kcc-release.md) for deliberate differences, including
 PNG rather than GIF for quantized Kindle EPUB pages and the size of upright spreads.
 
+The book matrix runs on Linux in CI. Two synthetic filename-order cases still differ from the
+reference on Windows. Record that platform-specific result rather than weakening the comparisons
+or treating a successful Linux run as Windows ordering parity.
+
 ## Automatic checks
 
 [KCC parity](../../.github/workflows/parity.yml) runs on pull requests and pushes to `main`
@@ -146,7 +152,7 @@ KCC 12.0.0 at commit `f127adbca992456e173d88ada18643eae66802fb` and the dependen
 then smoke checks for `K1`, `K2`, `KDX`, `KS3`, `KCS`, `KoLC`, and `RmkPPMove`. This spans all
 three grayscale palettes, old Kindle defaults, large screens, color devices, and each family.
 A separate `KS3` webtoon check also exercises its format-specific target.
-Routine CI adds the small boundary matrix and thirteen CLI-to-book cases.
+Routine CI adds the small boundary matrix and 34 CLI-to-book cases.
 
 It runs on Linux and supplements, rather than replaces, the three-platform Rust CI. There is
 no schedule or latest-release monitor. `workflow_dispatch` permits a manual run, with an
@@ -154,7 +160,7 @@ no schedule or latest-release monitor. `workflow_dispatch` permits a manual run,
 a new KCC release remains the contributor's responsibility below. Generated images and KCC's
 checkout stay under ignored `target/` and are not shipped in the application.
 The release workflow calls this comparison with `extended: true` on each tagged commit before
-packaging. This adds three boundary interactions and increases the book matrix to 29 cases.
+packaging. This adds three boundary interactions and increases the book matrix to 50 cases.
 You can run the same extended checks locally before proposing a release:
 
 ```sh

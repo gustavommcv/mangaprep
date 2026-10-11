@@ -16,9 +16,11 @@ verified remote checks for the exact commit, as described in [CONTRIBUTING](../C
 | Installer checksums and version selection | 13 | Implemented in [PR #19](https://github.com/gustavommcv/mangapress/pull/19); version-pinned downloads, checksum checks, and installed license notices |
 | CLI diagnostics, help, and documentation | 8, 10, 15 | Implemented in [PR #20](https://github.com/gustavommcv/mangapress/pull/20); quiet human pipe closure, source-page diagnostics, grouped help, and documented streams/exit codes |
 | Final pre-release parity review | Follow-up to 16 | Implemented in [PR #21](https://github.com/gustavommcv/mangapress/pull/21): [coverage inventory](../tools/parity/coverage.md), boundary cases and real CLI-to-book comparisons; extended release gate |
+| Large orchestration refactor | 17 | Implemented in PRs [#44](https://github.com/gustavommcv/mangapress/pull/44)–[#56](https://github.com/gustavommcv/mangapress/pull/56); behavior-preserving module layout in [ADR 0022](adr/0022-behavior-preserving-module-layout.md) |
 
 Finding 18's failure-path tests accompany the relevant fixes. The allocator/distribution
-benchmark (14) and the large orchestration refactor (17) are deferred, not resolved.
+benchmark (14) remains deferred. The refactor improves maintenance boundaries, not performance
+claims; compatibility fixes merged after 0.7.3 are summarized in the [0.7.4 notes](releases.md#074).
 The parity follow-up runs on relevant PRs/main changes. A schedule and latest-KCC-release
 monitor are not part of this change; new reference releases still require manual review.
 

@@ -14,6 +14,38 @@ Only the publication job has repository write permission. It downloads the `mang
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
 
+## 0.7.4
+
+This patch release contains the input, ordering, metadata, and encoding fixes merged since
+0.7.3, followed by the behavior-preserving module refactor. It adds no new CLI flags or output
+formats; automatic format selection and JSON protocol version 1 are unchanged.
+
+Release highlights:
+
+- Read CBZs with a single enclosing folder as the book they contain, including their metadata.
+  Process a folder's own pages before its chapter subfolders, and use the book title for
+  navigation entries that refer to pages directly in the book.
+- Treat unreadable ComicInfo metadata as a warning, and read UTF-16 metadata. Correct signed
+  issue-number padding, filename ordering, and custom-size palette/JPEG defaults.
+- Recover available image data from truncated PNG/GIF pages, retaining the existing refusal
+  of files whose required headers cannot be read.
+- Write JPEG pages and covers with optimized Huffman tables and 4:2:0 color sampling, and
+  improve PNG compression. Comparisons cover pixels, codec structure, and file size; files
+  are not claimed to be byte-identical to KCC's.
+- Separate CLI conversion phases, EPUB construction, and pipeline stages into focused modules.
+  Preserve public interfaces and the original tests, with additional CLI boundary tests.
+  This is a maintainability change, not a promised processing-speed improvement.
+
+[ADR 0020](adr/0020-follow-kcc-on-the-differences-left-open.md) and
+[ADR 0021](adr/0021-write-jpeg-pages-as-libjpeg-does.md) record the compatibility and encoding
+decisions; [ADR 0022](adr/0022-behavior-preserving-module-layout.md) records the refactor.
+The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit
+before publication, including extended comparisons and complete-book EPUB conformance.
+
+The independent KOReader page-wrapper correction and the proposal to make every Kindle
+profile default to CBZ remain outside this release. Mangabound's pinned toolchain will be
+updated separately; publishing this CLI release does not change the desktop application.
+
 ## 0.7.3 (2026-10-08)
 
 This patch release contains the October audit fixes and the EPUB follow-ups since 0.7.2.
