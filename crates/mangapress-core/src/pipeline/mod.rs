@@ -23,8 +23,8 @@ use image::ImageFormat;
 
 /// Options that drive a single conversion run. Mirrors the relevant subset
 /// of `kcc-c2e.py`'s argument groups (MAIN/PROCESSING) — see
-/// `mangapress-cli`'s `args.rs` for the full CLI surface and which of these
-/// are already wired up vs still `todo!()` downstream.
+/// `mangapress-cli`'s `args.rs` for the full CLI surface and its private
+/// `configuration` module for CLI-to-pipeline option mapping.
 #[derive(Debug, Clone)]
 pub struct PipelineOptions {
     pub profile: &'static crate::profile::Profile,
