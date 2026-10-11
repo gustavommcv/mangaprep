@@ -20,7 +20,7 @@ verified remote checks for the exact commit, as described in [CONTRIBUTING](../C
 
 Finding 18's failure-path tests accompany the relevant fixes. The allocator/distribution
 benchmark (14) remains deferred. The refactor improves maintenance boundaries, not performance
-claims; compatibility fixes merged after 0.7.3 are summarized in the [0.7.4 notes](releases.md#074).
+claims; compatibility fixes merged after 0.7.3 are summarized in the [0.8.0 notes](releases.md#080).
 The parity follow-up runs on relevant PRs/main changes. A schedule and latest-KCC-release
 monitor are not part of this change; new reference releases still require manual review.
 
