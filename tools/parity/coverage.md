@@ -12,6 +12,11 @@ The independent [complete-EPUB gate](../epubcheck/README.md) also checks selecte
 nested navigation, bookmark targets, collection metadata and external covers. Those checks do
 not turn the Rust-only or excluded entries below into direct KCC comparisons.
 
+Automatic format selection is a deliberate difference ([ADR 0024](../../docs/adr/0024-auto-format-is-cbz.md)):
+CBZ for Kindle, PDF for reMarkable, and EPUB for Kobo/`OTHER`; `--nested-toc` with `auto`
+selects EPUB on every profile. The comparisons choose a format explicitly; Rust CLI tests
+cover automatic selection and explicit overrides.
+
 | Options / behavior | Direct comparison | Other coverage / limits |
 | --- | --- | --- |
 | `--profile`, `--format` | Full K11 page matrix; seven representative profiles; EPUB/CBZ books | Rust device-resolution tests also cover PDF plans. Not every profile/format pairing. Auto-format differences are deliberate. |

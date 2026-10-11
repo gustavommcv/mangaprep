@@ -4,6 +4,68 @@ use std::process::Command;
 use support::{binary, fixture_folder, parse_events};
 
 #[test]
+fn automatic_formats_reach_the_written_book_and_nested_toc_selects_epub() {
+    let input = fixture_folder();
+    for (profile, automatic) in [
+        ("K11", "cbz"),
+        ("KS3", "cbz"),
+        ("KoC", "epub"),
+        ("Rmk2", "pdf"),
+    ] {
+        for nested in [false, true] {
+            let destination = tempfile::tempdir().unwrap();
+            let mut command = Command::new(binary());
+            command
+                .arg(input.path())
+                .args([
+                    "--profile",
+                    profile,
+                    "--noprocessing",
+                    "--json-events",
+                    "--output",
+                ])
+                .arg(destination.path());
+            if nested {
+                command.arg("--nested-toc");
+            }
+            let output = command.output().unwrap();
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert!(output.stderr.is_empty());
+            let events = parse_events(&output);
+            let result = events.last().unwrap();
+            let expected = if nested { "epub" } else { automatic };
+            assert_eq!(result["format"], expected, "{profile}, nested={nested}");
+            assert_eq!(result["written"], true);
+            let path = std::path::Path::new(result["output_path"].as_str().unwrap());
+            assert_eq!(path.extension().unwrap(), expected);
+            let bytes = std::fs::read(path).unwrap();
+            assert_eq!(bytes.len() as u64, result["bytes"].as_u64().unwrap());
+            if expected == "pdf" {
+                assert!(bytes.starts_with(b"%PDF-"));
+            } else {
+                let mut book = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
+                if expected == "epub" {
+                    use std::io::Read;
+                    let mut mimetype = String::new();
+                    book.by_name("mimetype")
+                        .unwrap()
+                        .read_to_string(&mut mimetype)
+                        .unwrap();
+                    assert_eq!(mimetype, "application/epub+zip");
+                } else {
+                    assert_eq!(book.len(), 4);
+                    assert!(book.file_names().all(|name| name.ends_with(".png")));
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn configuration_errors_keep_precedence_before_inspection_or_output_staging() {
     let input = fixture_folder();
     let missing = input.path().join("missing");
