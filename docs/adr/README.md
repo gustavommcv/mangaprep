@@ -24,3 +24,4 @@
 22. [Keep module refactors separate from behavior changes](0022-behavior-preserving-module-layout.md)
 23. [Give a page's wrapper no line height, so KOReader does not draw the page 12 px short](0023-no-line-height-around-a-page-image.md) — narrow exception to 13
 24. [`--format auto` gives CBZ for every Kindle](0024-auto-format-is-cbz.md) — replaces a row of 13
+25. [A CBZ keeps its chapters in the folders they were in](0025-a-cbz-keeps-its-chapters-in-the-folders-they-were-in.md) — applies a row of 13

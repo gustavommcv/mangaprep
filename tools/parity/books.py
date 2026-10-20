@@ -77,6 +77,11 @@ COLOUR_KEPT = FULL_TONE + ("--forcecolor", "--force-png-rgb", "--nokepub")
 # What Mangabind writes into the .cbz of a volume: one folder for the volume, one for each chapter, pages numbered p0001.
 MANGABIND_VOLUME = ["v001 - Vol.01/c001 - One/p0001.png", "v001 - Vol.01/c001 - One/p0002.png", "v001 - Vol.01/c002 - Two/p0001.png"]
 MANGABIND_SERIES = MANGABIND_VOLUME + ["v002 - Vol.02/c003 - Three/p0001.png"]
+# What `mangabind -combine` writes for a whole series: every volume numbers its chapters again from c001, with or without a title.
+MANGABIND_RESTARTING = ["v001 - Vol.01/c001 - One/p0001.png", "v001 - Vol.01/c002 - Two/p0001.png",
+                        "v002 - Vol.02/c001 - Three/p0001.png", "v002 - Vol.02/c002 - Four/p0001.png"]
+MANGABIND_UNTITLED = ["v001 - Vol.01/c001/p0001.png", "v001 - Vol.01/c002/p0001.png",
+                      "v002 - Vol.02/c001/p0001.png", "v002 - Vol.02/c002/p0001.png"]
 AUTHOR = ("-a", "Ada")
 WRAPPED = ["My Wrapper/001.png", "My Wrapper/002.png"]
 CHAPTERS = ["Ch 1/001.png", "Ch 1/002.png", "Ch 2/001.png"]
@@ -121,6 +126,11 @@ CASES = [
          tree=book_tree(["Vol 1/intro.png", "Vol 1/zz.png", "Vol 1/Ch 1/1.png", "Vol 1/Ch 2/1.png"])),
     Case("EPUB: a Mangabind series of two volumes as a .cbz", kcc=FULL_TONE + AUTHOR, ours=FULL_TONE + AUTHOR,
          tree=book_tree(MANGABIND_SERIES, info=None), archive=True),
+    # The pages of the .cbz are read in the order a reader gives them, by the natural sort of their whole names (MuPDF, so KOReader, does).
+    Case("CBZ: a Mangabind series whose volumes number their chapters again, in book order", "cbz", "K11",
+         kcc=FULL_TONE, ours=FULL_TONE, tree=book_tree(MANGABIND_RESTARTING, info=None), archive=True),
+    Case("CBZ: the same series with untitled chapters, the same chapter name in every volume", "cbz", "K11",
+         kcc=FULL_TONE, ours=FULL_TONE, tree=book_tree(MANGABIND_UNTITLED, info=None), archive=True),
     # A PNG or GIF that ends before its image does is a page, blank where the data ends: black, or the first color of a palette.
     Case("EPUB: a PNG cut short is a page, blank where the data ends", kcc=FULL_TONE, ours=FULL_TONE,
          tree=book_tree(["Pages/001.png"], extra={"Pages/002.png": cut_short(png)})),
