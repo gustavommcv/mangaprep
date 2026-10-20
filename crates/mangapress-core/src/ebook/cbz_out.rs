@@ -282,6 +282,9 @@ mod tests {
         assert_eq!(names, vec!["c001 - A-B/p0001.jpg"]);
     }
 
+    // Where a backslash is a separator (Windows) it never sits inside a name: it has already
+    // split the path into levels by the time the writer sees it.
+    #[cfg(unix)]
     #[test]
     fn a_backslash_in_a_folder_name_is_not_a_level() {
         let chapters = vec![nested_chapter("Vol 1/c001 - A\\B", 0)];
