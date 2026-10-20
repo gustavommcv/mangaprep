@@ -85,7 +85,7 @@ fn builds_a_valid_epub_from_a_real_mangabind_cbz() {
 
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&epub_bytes))
         .expect("output must be a valid zip");
-    assert_eq!(archive.by_index(0).unwrap().name(), "mimetype");
+    assert_eq!(archive.by_index(0).unwrap().name().unwrap(), "mimetype");
 
     let mut ncx = String::new();
     std::io::Read::read_to_string(&mut archive.by_name("OEBPS/toc.ncx").unwrap(), &mut ncx)
