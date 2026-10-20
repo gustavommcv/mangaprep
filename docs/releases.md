@@ -14,6 +14,38 @@ Only the publication job has repository write permission. It downloads the `mang
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
 
+## 0.8.1
+
+This patch release fixes the page order of a CBZ made from a whole series, and updates `zip`
+to clear three advisories. It adds and removes no CLI flags or output formats, and JSON
+protocol version 1 is unchanged. The pages written, and their order inside the file, are the
+same as before.
+
+Release highlights:
+
+- Keep each chapter in the folders it was in when writing a CBZ. For input with a folder for each
+  volume and a chapter folder inside it, such as the archive Mangabind writes for a whole series
+  (`mangabind -combine`), the CBZ named each chapter by its last folder alone and added ` (2)` to
+  repeats. A reader that orders pages by name, as KOReader's MuPDF does, showed the volumes
+  interleaved: a twelve-page, two-volume test book opened in the order `6 7 8 0 1 2 9 10 11 3 4 5`
+  and now opens `0 1 2 … 11`. Chapters keep their whole path (`v001 - Vol.01/c001/…`), as KCC 12.0.0
+  keeps it, and two new comparisons with it fail on the old naming. The folder names inside a CBZ
+  made from nested input change; input with one level of folders is written as before, and EPUB
+  and PDF are unchanged. [ADR 0025](adr/0025-a-cbz-keeps-its-chapters-in-the-folders-they-were-in.md)
+  records it.
+- Update `zip` to 9.0.5, which clears RUSTSEC-2026-0367, -0368 and -0369. They concern archive
+  extraction functions this tool does not call, so there was no exposure; the audit check now
+  passes again. A name inside an input archive that is valid UTF-8 is read as UTF-8 whether or
+  not the archive marks it, where `zip` 2 read unmarked names as code page 437. The compression
+  methods that can be read are unchanged. The dependency list changed (the license notices accept
+  `bzip2-1.0.6` for `libbz2-rs-sys` and `MIT-0` for `ppmd-rust`).
+
+The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit before
+publication, including extended comparisons and complete-book EPUB conformance.
+
+Mangabound's pinned toolchain will be updated separately; publishing this CLI release does not
+change the desktop application until its pin moves.
+
 ## 0.8.0
 
 This release contains the input, ordering, metadata, and encoding fixes merged since 0.7.3,
