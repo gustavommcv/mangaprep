@@ -39,7 +39,7 @@ pub(super) fn extract_selected<R: Read + Seek>(
         if zip_entry.is_dir() {
             continue;
         }
-        let relative_path = PathBuf::from(zip_entry.name());
+        let relative_path = PathBuf::from(zip_entry.name()?.into_owned());
         let declared_size = zip_entry.size();
         drop(zip_entry);
         if !keep(&relative_path) {

@@ -67,7 +67,7 @@ fn kindle_dx_plan_and_packaged_pages_use_the_same_format_specific_target() {
             let mut page_count = 0;
             for index in 0..book.len() {
                 let mut entry = book.by_index(index).unwrap();
-                if entry.name().ends_with(".png") {
+                if entry.name().unwrap().ends_with(".png") {
                     let mut bytes = Vec::new();
                     entry.read_to_end(&mut bytes).unwrap();
                     let page = image::load_from_memory(&bytes).unwrap();
@@ -220,7 +220,7 @@ fn scribe_epub_plan_pages_and_metadata_agree_on_the_width_cap() {
                 let mut page_count = 0;
                 for index in 0..book.len() {
                     let mut entry = book.by_index(index).unwrap();
-                    if entry.name().ends_with(".png") {
+                    if entry.name().unwrap().ends_with(".png") {
                         let mut bytes = Vec::new();
                         entry.read_to_end(&mut bytes).unwrap();
                         let page = image::load_from_memory(&bytes).unwrap();

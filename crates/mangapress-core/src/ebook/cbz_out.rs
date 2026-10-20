@@ -133,7 +133,7 @@ mod tests {
         let bytes = build_cbz(&chapters, None, None).unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         let names: Vec<String> = (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
             .collect();
         assert_eq!(
             names,
@@ -154,7 +154,7 @@ mod tests {
         let bytes = build_cbz(&chapters, None, None).unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         let names: Vec<String> = (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
             .collect();
         assert_eq!(names, vec!["Extras/p0001.jpg", "Extras (2)/p0001.jpg"]);
     }
@@ -175,7 +175,7 @@ mod tests {
     fn entry_names(bytes: Vec<u8>) -> Vec<String> {
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
             .collect()
     }
 
@@ -209,7 +209,7 @@ mod tests {
         let bytes = build_cbz(&chapters, None, None).unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         let mut names: Vec<String> = (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
             .collect();
         names.sort_by(|a, b| crate::natural_sort::compare_paths(Path::new(a), Path::new(b)));
         let levels: Vec<u8> = names
@@ -302,7 +302,10 @@ mod tests {
         )
         .unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
-        assert_eq!(archive.by_index(0).unwrap().name(), "ComicInfo.xml");
+        assert_eq!(
+            archive.by_index(0).unwrap().name().unwrap(),
+            "ComicInfo.xml"
+        );
         let mut contents = String::new();
         std::io::Read::read_to_string(
             &mut archive.by_name("ComicInfo.xml").unwrap(),
@@ -326,7 +329,7 @@ mod tests {
         let bytes = build_cbz(&chapters, None, Some(b"cover bytes")).unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         let mut names: Vec<String> = (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
             .collect();
         names.sort();
         assert_eq!(names[0], "##cover.jpg");

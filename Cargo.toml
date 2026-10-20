@@ -14,7 +14,7 @@ image = { version = "0.25", default-features = false, features = ["jpeg", "png",
 png = "0.18"
 jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
 rustfft = "6"
-zip = "2"
+zip = "9"
 rayon = "1"
 clap = { version = "4", features = ["derive"] }
 thiserror = "2"

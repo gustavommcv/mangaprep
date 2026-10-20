@@ -40,7 +40,10 @@ fn converted_names(book: &Path, output: &Path) -> Vec<String> {
         String::from_utf8_lossy(&result.stderr)
     );
     let archive = zip::ZipArchive::new(std::fs::File::open(output).unwrap()).unwrap();
-    archive.file_names().map(str::to_string).collect()
+    archive
+        .file_names()
+        .map(|name| name.unwrap().into_owned())
+        .collect()
 }
 
 /// A reader that orders the pages by their names, as KOReader's MuPDF does, must find them in the
