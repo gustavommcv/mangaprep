@@ -195,6 +195,10 @@ a file named after the input with `.json` appended, such as `Volume 1.cbz.json`.
 For an archive created by Mangabind's `--combine`, add `--nested-toc`. Volume folders become
 parent entries and their chapters appear beneath them in the table of contents.
 
+A CBZ made from such an archive keeps the volume and chapter folders (`v001 - Vol.01/c001/…`),
+so a reader that orders pages by name, as KOReader does, shows the book in order. It has no
+table of contents: for navigation, use EPUB with `--nested-toc`.
+
 ```sh
 mangapress "Example Series.cbz" --profile K11 --format epub --nested-toc
 ```
