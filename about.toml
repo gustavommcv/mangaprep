@@ -3,19 +3,13 @@ accepted = ["MIT", "Apache-2.0", "BSD-3-Clause", "Zlib", "Unicode-3.0"]
 ignore-dev-dependencies = true
 workarounds = ["rustix"]
 
-# The wrapper's metadata omits the license of its bundled native library.
-[bzip2-sys]
+# bzip2 uses a pure-Rust port of the C library; its metadata names that library's license.
+[libbz2-rs-sys]
 accepted = ["bzip2-1.0.6"]
-[bzip2-sys.clarify]
-license = "MIT AND bzip2-1.0.6"
-[[bzip2-sys.clarify.files]]
-path = "LICENSE-MIT"
-license = "MIT"
-checksum = "c8c6324cf2f0f076e3ed5dea4a21f00bd4dd6fce44f72b110bc52e7fe06f6e1e"
-[[bzip2-sys.clarify.files]]
-path = "bzip2-1.0.8/LICENSE"
-license = "bzip2-1.0.6"
-checksum = "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3"
+
+# Dual-licensed CC0-1.0 or MIT-0: the permissive MIT-0 is the one taken.
+[ppmd-rust]
+accepted = ["MIT-0"]
 
 # Use the BSD text actually packaged, rather than the manifest's legacy slash expression.
 [brotli-decompressor.clarify]

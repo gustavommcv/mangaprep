@@ -486,7 +486,7 @@ fn cbz_cover_and_xml_rules_keep_original_payloads_and_extra_entry_order() {
                 .unwrap();
                 let mut archive = zip::ZipArchive::new(Cursor::new(&book.bytes)).unwrap();
                 let names = (0..archive.len())
-                    .map(|i| archive.by_index(i).unwrap().name().to_owned())
+                    .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
                     .collect::<Vec<_>>();
                 assert_eq!(names.iter().any(|n| n == "##cover.jpg"), custom || smart);
                 assert_eq!(names.iter().any(|n| n == "ComicInfo.xml"), keep);

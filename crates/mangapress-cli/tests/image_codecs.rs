@@ -93,8 +93,11 @@ fn supported_page_formats_convert_from_folders_and_cbz_to_every_book_format() {
                 let mut pages = 0;
                 for index in 0..book.len() {
                     let mut entry = book.by_index(index).unwrap();
-                    if !entry.name().ends_with(if png { ".png" } else { ".jpg" })
-                        || entry.name().ends_with("cover.jpg")
+                    if !entry
+                        .name()
+                        .unwrap()
+                        .ends_with(if png { ".png" } else { ".jpg" })
+                        || entry.name().unwrap().ends_with("cover.jpg")
                     {
                         continue;
                     }
@@ -163,7 +166,7 @@ fn bmp_passthrough_is_rejected_only_for_epub_and_uses_detected_codec() {
                     assert_eq!(book.len(), 2);
                     for index in 0..book.len() {
                         let mut entry = book.by_index(index).unwrap();
-                        assert!(entry.name().ends_with(".bmp"));
+                        assert!(entry.name().unwrap().ends_with(".bmp"));
                         let mut bytes = Vec::new();
                         entry.read_to_end(&mut bytes).unwrap();
                         assert_eq!(bytes, original);

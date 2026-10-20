@@ -77,7 +77,7 @@ fn produces_a_valid_zip_with_mimetype_first_and_stored() {
     let bytes = build_epub(&sample_chapters(), &default_options()).unwrap();
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
     let mimetype_entry = archive.by_index(0).unwrap();
-    assert_eq!(mimetype_entry.name(), "mimetype");
+    assert_eq!(mimetype_entry.name().unwrap(), "mimetype");
     assert_eq!(mimetype_entry.compression(), zip::CompressionMethod::Stored);
 }
 

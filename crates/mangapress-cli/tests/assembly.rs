@@ -152,7 +152,7 @@ fn cbz_keeps_original_xml_and_smart_default_cover_without_changing_source_pages(
     let bytes = std::fs::read(destination).unwrap();
     let mut book = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
     let names = (0..book.len())
-        .map(|i| book.by_index(i).unwrap().name().to_owned())
+        .map(|i| book.by_index(i).unwrap().name().unwrap().to_string())
         .collect::<Vec<_>>();
     assert_eq!(&names[..2], ["##cover.jpg", "ComicInfo.xml"]);
     assert_eq!(member(&bytes, "ComicInfo.xml"), original_xml);

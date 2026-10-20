@@ -58,7 +58,9 @@ fn automatic_formats_reach_the_written_book_and_nested_toc_selects_epub() {
                     assert_eq!(mimetype, "application/epub+zip");
                 } else {
                     assert_eq!(book.len(), 4);
-                    assert!(book.file_names().all(|name| name.ends_with(".png")));
+                    assert!(book
+                        .file_names()
+                        .all(|name| name.unwrap().ends_with(".png")));
                 }
             }
         }
