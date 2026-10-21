@@ -101,7 +101,9 @@ fn main() {
         files.sort();
         let images = files
             .iter()
-            .map(|file| image::open(file).unwrap().to_rgb8())
+            .map(|file| {
+                mangapress_core::webtoon::decode_strip_image(&std::fs::read(file).unwrap()).unwrap()
+            })
             .collect();
         let strip = mangapress_core::webtoon::merge_strip(images).unwrap();
         strip.save(format!("{out_dir}/strip.png")).unwrap();

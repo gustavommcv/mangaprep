@@ -462,3 +462,62 @@ fn a_header_that_is_not_complete_is_still_an_error() {
     );
     assert!(decode_page(&bytes[..20]).is_err());
 }
+
+fn libjpeg_fixture(name: &str) -> Vec<u8> {
+    let path = format!(
+        "{}/../../tests/fixtures/libjpeg/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    std::fs::read(&path).unwrap_or_else(|error| panic!("{path}: {error}"))
+}
+
+#[test]
+fn a_jpeg_decodes_to_the_pixels_pillow_gives_kcc() {
+    // Pillow 12.3.0 (libjpeg-turbo) decoded these files for the reference PNGs. zune-jpeg,
+    // which decoded them before, differs on 22% of their samples.
+    let color = decode_image(&libjpeg_fixture("color-420.jpg")).unwrap();
+    let expected = image::load_from_memory(&libjpeg_fixture("color-420.pillow.png")).unwrap();
+    assert_eq!(color.color(), image::ColorType::Rgb8);
+    assert_eq!(color.to_rgb8(), expected.to_rgb8());
+
+    let gray = decode_image(&libjpeg_fixture("gray.jpg")).unwrap();
+    let expected = image::load_from_memory(&libjpeg_fixture("gray.pillow.png")).unwrap();
+    assert_eq!(gray.color(), image::ColorType::L8);
+    assert_eq!(gray.to_luma8(), expected.to_luma8());
+}
+
+#[test]
+fn a_cmyk_jpeg_is_still_decoded_by_the_image_crate() {
+    let bytes = libjpeg_fixture("cmyk.jpg");
+    assert_eq!(decode_jpeg_as_kcc(&bytes), None);
+    assert_eq!(
+        decode_image(&bytes).unwrap(),
+        image::load_from_memory_with_format(&bytes, image::ImageFormat::Jpeg).unwrap()
+    );
+}
+
+#[test]
+fn a_jpeg_libjpeg_refuses_comes_back_as_no_image_rather_than_unwinding_further() {
+    // A Huffman table that claims more codes than a table can hold: libjpeg stops with an error,
+    // which it reports by unwinding out of its C code.
+    let mut bytes = libjpeg_fixture("gray.jpg");
+    let table = bytes
+        .windows(2)
+        .position(|marker| marker == [0xFF, 0xC4])
+        .unwrap();
+    bytes[table + 5..table + 21].fill(0xFF);
+
+    assert_eq!(decode_jpeg_as_kcc(&bytes), None);
+    assert!(std::panic::catch_unwind(|| decode_image(&bytes)).is_ok());
+}
+
+#[test]
+fn a_jpeg_cut_short_is_a_page_of_its_full_size() {
+    let bytes = libjpeg_fixture("color-420.jpg");
+    let page = decode_page(&bytes[..bytes.len() * 2 / 3]).unwrap();
+    assert_eq!(
+        (page.image.width(), page.image.height()),
+        (61, 45),
+        "what was not read is filled in, as Pillow does when KCC asks for truncated images"
+    );
+}

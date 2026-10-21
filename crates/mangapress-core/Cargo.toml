@@ -11,6 +11,8 @@ description = "Manga/comic e-ink conversion pipeline: device profiles, image pro
 image = { workspace = true }
 png = { workspace = true }
 jpeg-encoder = { workspace = true }
+mozjpeg = { workspace = true }
+mozjpeg-sys = { workspace = true }
 rustfft = { workspace = true }
 zip = { workspace = true }
 thiserror = { workspace = true }

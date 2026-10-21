@@ -7,6 +7,16 @@ workarounds = ["rustix"]
 [libbz2-rs-sys]
 accepted = ["bzip2-1.0.6"]
 
+# A build dependency of mozjpeg-sys, offered under CC0-1.0, MIT-0 or Apache-2.0: CC0-1.0 is the
+# text it packages, so that one is taken.
+[dunce]
+accepted = ["CC0-1.0"]
+[dunce.clarify]
+license = "CC0-1.0"
+[[dunce.clarify.files]]
+path = "LICENSE"
+checksum = "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+
 # Dual-licensed CC0-1.0 or MIT-0: the permissive MIT-0 is the one taken.
 [ppmd-rust]
 accepted = ["MIT-0"]
@@ -67,6 +77,44 @@ override-git-commit = "6c3c0466f451c5bd2007087728cd168798cd64e8"
 [[pathfinder_geometry.clarify.git]]
 path = "LICENSE-MIT"
 checksum = "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+
+# JPEG pages are decoded by libjpeg-turbo through mozjpeg (ADR 0028). Both crates package
+# libjpeg-turbo's combined notice: the IJG's, whose full terms the jpeg-encoder entry below
+# already reproduces, and libjpeg-turbo's own BSD-3-Clause. mozjpeg-sys is built without SIMD,
+# so the zlib-licensed SIMD sources it also carries are not compiled.
+[mozjpeg]
+accepted = ["IJG", "BSD-3-Clause"]
+[mozjpeg.clarify]
+license = "IJG AND BSD-3-Clause"
+[[mozjpeg.clarify.files]]
+path = "LICENSE"
+license = "IJG"
+checksum = "328b7acae3fa659297a1075679723d8247f8b7f1320864a674351722b2f62a7f"
+start = "The Independent JPEG Group's JPEG software"
+end = "(also known as JPEG, together with ITU-T SG16)."
+[[mozjpeg.clarify.files]]
+path = "LICENSE"
+license = "BSD-3-Clause"
+checksum = "6326afed3960ca4bc9dec51c1ae2dc53aaa4ef3e9c0799df61d3259ef0af7b91"
+start = "Copyright (C)2009-2023 D. R. Commander."
+end = "POSSIBILITY OF SUCH DAMAGE."
+
+[mozjpeg-sys]
+accepted = ["IJG", "BSD-3-Clause"]
+[mozjpeg-sys.clarify]
+license = "IJG AND BSD-3-Clause"
+[[mozjpeg-sys.clarify.files]]
+path = "LICENSE"
+license = "IJG"
+checksum = "328b7acae3fa659297a1075679723d8247f8b7f1320864a674351722b2f62a7f"
+start = "The Independent JPEG Group's JPEG software"
+end = "(also known as JPEG, together with ITU-T SG16)."
+[[mozjpeg-sys.clarify.files]]
+path = "LICENSE"
+license = "BSD-3-Clause"
+checksum = "6326afed3960ca4bc9dec51c1ae2dc53aaa4ef3e9c0799df61d3259ef0af7b91"
+start = "Copyright (C)2009-2023 D. R. Commander."
+end = "POSSIBILITY OF SUCH DAMAGE."
 
 # jpeg-encoder's integer DCT is the Independent JPEG Group's; the notice it must carry (the
 # IJG license, which asks for an acknowledgement in the documentation) is the header of that file.

@@ -66,6 +66,12 @@ pub fn merge_strip(pages: Vec<RgbImage>) -> Result<RgbImage> {
     Ok(strip)
 }
 
+/// One image of a chapter folder as the strip takes it: decoded as every page is (a JPEG by
+/// libjpeg-turbo, as KCC's Pillow decodes it; ADR 0028), and RGB, as upstream's strip is.
+pub fn decode_strip_image(source: &[u8]) -> Result<RgbImage> {
+    Ok(crate::input::decode_image(source)?.to_rgb8())
+}
+
 /// The whole step for one chapter folder: its images, still encoded, in;
 /// the pages they become, as PNG, out. PNG because upstream writes them so
 /// (they are processed like any other source page afterwards), and RGB even
@@ -76,7 +82,7 @@ pub fn pages_from_chapter(sources: &[&[u8]], device: (u32, u32)) -> Result<Vec<V
 
     let mut decoded = Vec::with_capacity(sources.len());
     for source in sources {
-        decoded.push(crate::input::decode_image(source)?.to_rgb8());
+        decoded.push(decode_strip_image(source)?);
     }
     let strip = merge_strip(decoded)?;
 

@@ -13,6 +13,11 @@ repository = "https://github.com/gustavommcv/mangapress"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "bmp", "webp"] }
 png = "0.18"
 jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
+# libjpeg-turbo's decoder, as Pillow decodes JPEG for KCC (ADR 0028). Built from its C sources
+# without SIMD, so no assembler is needed and every target decodes the same; `unwinding` is what
+# lets libjpeg's errors come back to Rust.
+mozjpeg = { version = "0.10", default-features = false }
+mozjpeg-sys = { version = "2", default-features = false, features = ["unwinding", "parallel"] }
 rustfft = "6"
 zip = "9"
 rayon = "1"
