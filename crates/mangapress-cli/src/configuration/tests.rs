@@ -205,11 +205,7 @@ fn invalid_resolution_precedes_nested_toc_validation() {
 #[test]
 fn nested_toc_compatibility_uses_the_resolved_format() {
     let input = tempfile::tempdir().unwrap();
-    for (code, flag, name) in [
-        ("KDX", "cbz", "Cbz"),
-        ("K11", "cbz", "Cbz"),
-        ("Rmk2", "pdf", "Pdf"),
-    ] {
+    for (code, flag) in [("KDX", "cbz"), ("K11", "cbz")] {
         let mut failure = initial_failure();
         let error = resolve(
             arguments(
@@ -223,18 +219,33 @@ fn nested_toc_compatibility_uses_the_resolved_format() {
         assert_eq!(failure.stage, "configuration");
         assert_eq!(
             error.to_string(),
-            format!("--nested-toc requires --format epub, got --format {name}")
+            "--nested-toc requires --format epub or --format pdf, got --format cbz"
         );
         assert!(failure
             .diagnostic
             .contains("0012-nested-toc-for-combined-volumes.md"));
     }
-    for options in [
-        vec!["--profile", "KDX", "--format", "epub", "--nested-toc"],
-        vec!["--profile", "K11", "--format", "epub", "--nested-toc"],
+    for (options, format) in [
+        (
+            vec!["--profile", "KDX", "--format", "epub", "--nested-toc"],
+            Format::Epub,
+        ),
+        (
+            vec!["--profile", "K11", "--format", "epub", "--nested-toc"],
+            Format::Epub,
+        ),
+        // A PDF has bookmarks to nest too (ADR 0026), so asking for them is not refused.
+        (
+            vec!["--profile", "Rmk2", "--format", "pdf", "--nested-toc"],
+            Format::Pdf,
+        ),
+        (
+            vec!["--profile", "K11", "--format", "pdf", "--nested-toc"],
+            Format::Pdf,
+        ),
     ] {
         let resolved = settings(input.path(), &options);
-        assert_eq!(resolved.cli.format, Format::Epub);
+        assert_eq!(resolved.cli.format, format);
         assert!(resolved.cli.nested_toc);
     }
 }

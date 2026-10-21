@@ -256,6 +256,7 @@ pub struct Cli {
 
     /// Output format. `auto` picks CBZ for Kindle, PDF for reMarkable and
     /// EPUB for everything else, and EPUB whenever `--nested-toc` is given.
+    /// A PDF has a bookmark for each chapter.
     #[arg(short, long, value_enum, default_value_t = Format::Auto, help_heading = "Conversion", display_order = 1)]
     pub format: Format,
 
@@ -297,8 +298,9 @@ pub struct Cli {
     /// Expect the input's chapter folders to be nested one level deeper
     /// under a volume folder (Volume/Chapter/pages - what Mangabind's
     /// `-combine` mode produces) and build a two-level table of contents:
-    /// a volume entry, its chapters nested underneath. EPUB output only for
-    /// now; combining this with --format cbz or --format pdf is refused.
+    /// a volume entry, its chapters nested underneath. An EPUB's table of
+    /// contents, or a PDF's bookmarks; a CBZ has neither, so combining this
+    /// with --format cbz is refused.
     #[arg(long, help_heading = "Covers and chapters")]
     pub nested_toc: bool,
 }

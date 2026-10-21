@@ -105,7 +105,7 @@ Version 1 issue codes are:
 |---|---|---|
 | `invalid_arguments` | `configuration` | clap rejected the invocation |
 | `unknown_profile` | `configuration` | The requested profile does not exist |
-| `nested_toc_unsupported_format` | `configuration` | Nested volume/chapter navigation was requested with a format other than EPUB |
+| `nested_toc_unsupported_format` | `configuration` | Nested volume/chapter navigation was requested with a CBZ, which has neither a table of contents nor bookmarks (an EPUB and a PDF take it, [ADR 0026](adr/0026-a-pdf-has-bookmarks.md)) |
 | `invalid_resolution` | `configuration` | The effective target width or height is zero |
 | `input_not_found` | `inspect` | The input path does not exist |
 | `input_read_failed` | `inspect` | The folder or CBZ could not be read |

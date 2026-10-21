@@ -115,7 +115,7 @@ does not create MOBI or AZW3 files for the Kindle's native reader.
 Since 0.8.0, Kindle profiles default to CBZ, suitable for KOReader. Choose `--format epub`
 for EPUB chapter navigation and resolved book metadata; reMarkable still defaults to PDF,
 and Kobo/`OTHER` to EPUB. With `--nested-toc`, automatic selection uses EPUB on every profile.
-Explicit CBZ or PDF with `--nested-toc` is refused.
+Explicit CBZ with `--nested-toc` is refused; a PDF takes it.
 
 List device profiles, or preview the chapters, metadata, and output path before converting:
 
@@ -193,17 +193,19 @@ a file named after the input with `.json` appended, such as `Volume 1.cbz.json`.
 ### Combine volumes with chapter navigation
 
 For an archive created by Mangabind's `--combine`, add `--nested-toc`. Volume folders become
-parent entries and their chapters appear beneath them in the table of contents.
+parent entries and their chapters appear beneath them in the table of contents of an EPUB, or in
+the bookmarks of a PDF (a volume starts closed). Without it, a PDF has one bookmark for each
+chapter and an EPUB one entry for each.
 
 A CBZ made from such an archive keeps the volume and chapter folders (`v001 - Vol.01/c001/…`),
 so a reader that orders pages by name, as KOReader does, shows the book in order. It has no
-table of contents: for navigation, use EPUB with `--nested-toc`.
+table of contents or bookmarks: for navigation, use EPUB or PDF with `--nested-toc`.
 
 ```sh
 mangapress "Example Series.cbz" --profile K11 --format epub --nested-toc
 ```
 
-Nested navigation currently requires EPUB; CBZ and PDF are rejected with this option.
+Nested navigation needs an EPUB or a PDF; a CBZ is rejected with this option.
 
 ## Machine-readable integration
 
