@@ -18,8 +18,9 @@ the release tag to exist. Archive names and installer entry points are unchanged
 
 This patch release fixes the page order of a CBZ made from a whole series, and updates `zip`
 to clear three advisories. It adds and removes no CLI flags or output formats, and JSON
-protocol version 1 is unchanged. The pages written, and their order inside the file, are the
-same as before.
+protocol version 1 is unchanged. The pixels of the pages written, and their order inside the
+file, are the same as before; PNG pages are compressed by another library and their files differ
+in size (see below).
 
 Release highlights:
 
@@ -39,6 +40,12 @@ Release highlights:
   not the archive marks it, where `zip` 2 read unmarked names as code page 437. The compression
   methods that can be read are unchanged. The dependency list changed (the license notices accept
   `bzip2-1.0.6` for `libbz2-rs-sys` and `MIT-0` for `ppmd-rust`).
+- **PNG files are not byte-identical to 0.8.0's.** `zip` 9 turns on the `zlib-rs` backend of `flate2`,
+  which is also the library that compresses PNG pages, in place of `miniz_oxide`. The decoded pixels
+  are the same (checked on the same pages with the 0.8.0 and 0.8.1 binaries, and by the comparison
+  with KCC 12.0.0, which looks at pixels), and the files differ in size: from 1.9% smaller to 0.2%
+  larger in the guide's option examples, 0.8% to 1.0% smaller on three plain test pages. JPEG pages
+  are unchanged. As in the 0.8.0 notes, files are not claimed to be byte-identical to KCC's.
 
 The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit before
 publication, including extended comparisons and complete-book EPUB conformance.
