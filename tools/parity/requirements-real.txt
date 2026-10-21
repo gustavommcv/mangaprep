@@ -1,0 +1,5 @@
+# Development-only: real-manga books through KCC's own CLI (real_books.py) need what the oracle
+# replaces with stubs, PyMuPDF for its PDF and MozJPEG's optimizer for its JPEG pages.
+-r requirements.txt
+pymupdf==2.0
+mozjpeg-lossless-optimization==1.3.2

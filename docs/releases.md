@@ -10,6 +10,10 @@ workflows used for PRs, on that exact commit, with the extended pre-release pari
 enabled, before building the four existing release targets. A failing validation, test,
 advisory check, notice generation, comparison, EPUB check or build blocks publication.
 
+The comparison with KCC in CI runs on drawn pages. When a release changes processing, decoding or
+book output, also run the [real-manga comparison](../tools/parity/README.md#real-manga) on local
+volumes before tagging; it cannot run in CI, since the volumes cannot be published.
+
 Only the publication job has repository write permission. It downloads the `mangapress-*`
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
