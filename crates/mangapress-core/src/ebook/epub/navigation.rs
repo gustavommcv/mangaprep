@@ -1,4 +1,5 @@
 use super::{xml_escape, Chapter, EpubOptions};
+use crate::ebook::contents::{chapter_label, group_by_volume};
 
 pub(super) fn build_ncx(
     options: &EpubOptions,
@@ -16,7 +17,7 @@ pub(super) fn build_ncx(
         *targets.entry(href.to_owned()).or_insert(next)
     };
     let nav_points: String = if nested {
-        group_by_volume(chapters, chapter_hrefs)
+        group_by_volume(chapters.iter().copied().zip(chapter_hrefs))
             .into_iter()
             .map(|volume| {
                 id += 1;
@@ -30,7 +31,7 @@ pub(super) fn build_ncx(
                         let chapter_order = play_order(href);
                         format!(
                             r#"<navPoint id="chapter{id}" playOrder="{chapter_order}"><navLabel><text>{title}</text></navLabel><content src="{href}"/></navPoint>"#,
-                            title = xml_escape(toc_label(chapter, &options.title)),
+                            title = xml_escape(chapter_label(chapter, &options.title)),
                         )
                     })
                     .collect::<Vec<_>>()
@@ -54,7 +55,7 @@ pub(super) fn build_ncx(
                 let chapter_order = play_order(href);
                 format!(
                     r#"<navPoint id="chapter{id}" playOrder="{chapter_order}"><navLabel><text>{title}</text></navLabel><content src="{href}"/></navPoint>"#,
-                    title = xml_escape(toc_label(chapter, &options.title)),
+                    title = xml_escape(chapter_label(chapter, &options.title)),
                 )
             })
             .collect::<Vec<_>>()
@@ -90,7 +91,7 @@ pub(super) fn build_nav(
     nested: bool,
 ) -> String {
     let items: String = if nested {
-        group_by_volume(chapters, chapter_hrefs)
+        group_by_volume(chapters.iter().copied().zip(chapter_hrefs))
             .into_iter()
             .map(|volume| {
                 let children: String = volume
@@ -99,7 +100,7 @@ pub(super) fn build_nav(
                     .map(|(chapter, href)| {
                         format!(
                             r#"<li><a href="{href}">{title}</a></li>"#,
-                            title = xml_escape(toc_label(chapter, &options.title)),
+                            title = xml_escape(chapter_label(chapter, &options.title)),
                         )
                     })
                     .collect::<Vec<_>>()
@@ -121,7 +122,7 @@ pub(super) fn build_nav(
             .map(|(chapter, href)| {
                 format!(
                     r#"<li><a href="{href}">{title}</a></li>"#,
-                    title = xml_escape(toc_label(chapter, &options.title)),
+                    title = xml_escape(chapter_label(chapter, &options.title)),
                 )
             })
             .collect::<Vec<_>>()
@@ -158,69 +159,12 @@ pub(super) fn build_nav(
             .map(|(chapter, href)| {
                 format!(
                     r#"<li><a href="{href}">{title}</a></li>"#,
-                    title = xml_escape(toc_label(chapter, &options.title)),
+                    title = xml_escape(chapter_label(chapter, &options.title)),
                 )
             })
             .collect::<Vec<_>>()
             .join("\n"),
     )
-}
-
-/// What the table of contents calls a chapter. Pages lying directly in the book have no
-/// folder to name them, so the book's own title stands in, as upstream does; a bookmark has
-/// no pages and keeps the name it was given.
-fn toc_label<'a>(chapter: &'a Chapter, book_title: &'a str) -> &'a str {
-    if chapter.relative_path.as_os_str().is_empty() && !chapter.pages.is_empty() {
-        book_title
-    } else {
-        &chapter.title
-    }
-}
-
-/// One volume's worth of already-flat chapters, grouped for `nested_toc`
-/// output only. Built purely from each [`Chapter`]'s existing
-/// `relative_path` - its parent-of-parent directory is the volume, matching
-/// how Mangabind's `-combine` mode nests `<volume dir>/<chapter dir>/...`
-/// (see `docs/adr/0005-mangabind-contract.md` for why chapters are already
-/// grouped by full path, and `docs/adr/0012-nested-toc-for-combined-volumes.md`
-/// for this one more level). No change to [`crate::ebook::group_into_chapters`] or
-/// the [`Chapter`] type itself was needed for this.
-struct VolumeGroup<'a> {
-    title: String,
-    chapters: Vec<(&'a Chapter, &'a String)>,
-}
-
-fn group_by_volume<'a>(
-    chapters: &[&'a Chapter],
-    chapter_hrefs: &'a [String],
-) -> Vec<VolumeGroup<'a>> {
-    let mut order: Vec<String> = Vec::new();
-    let mut by_volume: std::collections::HashMap<String, Vec<(&Chapter, &String)>> =
-        std::collections::HashMap::new();
-
-    for (chapter, href) in chapters.iter().zip(chapter_hrefs) {
-        let volume_title = chapter
-            .relative_path
-            .parent()
-            .and_then(|p| p.file_name())
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_else(|| "Untitled".to_string());
-        if !by_volume.contains_key(&volume_title) {
-            order.push(volume_title.clone());
-        }
-        by_volume
-            .entry(volume_title)
-            .or_default()
-            .push((*chapter, href));
-    }
-
-    order
-        .into_iter()
-        .map(|title| {
-            let chapters = by_volume.remove(&title).expect("just inserted above");
-            VolumeGroup { title, chapters }
-        })
-        .collect()
 }
 
 /// The table-of-contents entries `ComicInfo.xml`'s bookmarks ask for: one
