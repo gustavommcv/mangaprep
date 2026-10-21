@@ -1,8 +1,8 @@
 //! Output format builders. No PDF-rendering library dependency is needed
 //! anywhere here — mangapress's scope is images/`.cbz` *in*, never PDF in,
 //! so [`pdf`] only ever composes already-processed raster pages onto PDF
-//! pages (`printpdf`), unlike upstream KCC which also uses PyMuPDF to
-//! *read* PDF input.
+//! pages (written with `lopdf`), unlike upstream KCC which also uses PyMuPDF
+//! to *read* PDF input.
 //!
 //! MOBI/AZW3 is permanently out of scope — see
 //! `docs/adr/0008-mobi-azw3-permanently-out-of-scope.md`.

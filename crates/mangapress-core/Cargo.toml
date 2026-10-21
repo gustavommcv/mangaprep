@@ -14,7 +14,6 @@ jpeg-encoder = { workspace = true }
 rustfft = { workspace = true }
 zip = { workspace = true }
 thiserror = { workspace = true }
-printpdf = { workspace = true }
 lopdf = { workspace = true }
 roxmltree = { workspace = true }
 

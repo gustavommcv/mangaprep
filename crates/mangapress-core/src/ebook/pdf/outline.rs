@@ -1,10 +1,8 @@
 //! The outline of a PDF: the bookmarks a reader lists beside the pages, each one a title that
 //! jumps to a page, and under a volume the chapters of it.
 //!
-//! `printpdf` can add bookmarks, but only as one flat list sorted by page and then by name, which
-//! puts a chapter before the volume that starts on the same page and has no second level. The
-//! outline is written here instead, into the `lopdf` document that `printpdf` hands over before it
-//! is saved (ADR 0026).
+//! Written into the `lopdf` document of the book once its pages are in it (ADR 0026, ADR 0027): a
+//! bookmark for each chapter, or for each volume with its chapters under it.
 
 use lopdf::{Dictionary, Document, Object, ObjectId};
 
@@ -96,11 +94,11 @@ fn descendants(entry: &Entry) -> usize {
 }
 
 /// A title as a PDF text string: UTF-16 with its byte order mark, which every reader understands
-/// whatever the language of the title.
-fn text(label: &str) -> Object {
+/// whatever the language of the title, written in hexadecimal so the file needs no escapes.
+pub(super) fn text(label: &str) -> Object {
     let mut bytes = vec![0xFE, 0xFF];
     for unit in label.encode_utf16() {
         bytes.extend_from_slice(&unit.to_be_bytes());
     }
-    Object::string_literal(bytes)
+    Object::String(bytes, lopdf::StringFormat::Hexadecimal)
 }
