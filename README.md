@@ -51,11 +51,11 @@ manually rather than bypassing verification.
 To select a published version, set `MANGAPRESS_VERSION` (with or without its `v` prefix):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.1 sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.2 sh
 ```
 
 ```powershell
-$env:MANGAPRESS_VERSION = 'v0.8.1'
+$env:MANGAPRESS_VERSION = 'v0.8.2'
 irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
 ```
 

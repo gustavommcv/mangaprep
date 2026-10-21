@@ -14,6 +14,42 @@ Only the publication job has repository write permission. It downloads the `mang
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
 
+## 0.8.2
+
+This release gives a PDF bookmarks. It adds and removes no CLI flags or output formats, and JSON
+protocol version 1 is unchanged. The pages of every format, and the title and author in a PDF, are
+the same as before.
+
+Release highlights:
+
+- A PDF has a bookmark for each chapter, opening the chapter's first page, named as the EPUB's
+  table of contents names it (the folder of the chapter; the book's title for pages lying directly in
+  the book). A reader lists them beside the pages, and a long book has a way to reach a chapter
+  other than turning pages. Titles are kept in any language. KCC's PDF has no bookmarks, so this is
+  a difference from it, recorded with its reason in
+  [ADR 0026](adr/0026-a-pdf-has-bookmarks.md).
+- With `--nested-toc`, a PDF's bookmarks have two levels: one for each volume, closed, with its
+  chapters under it, as an EPUB's table of contents has them. This is for the archive Mangabind
+  writes for a whole series (`mangabind -combine`). Read back with KOReader's MuPDF, a series of
+  three volumes lists each volume with its chapters under it, each on the page it opens.
+- `--nested-toc` is accepted for a PDF, where it was refused. It is still refused for a CBZ, which
+  has neither a table of contents nor bookmarks to nest: the error code is the same,
+  `nested_toc_unsupported_format`, and its message now says `--format epub or --format pdf`.
+  `--format auto` with `--nested-toc` is still an EPUB on every profile.
+- The bookmarks of `ComicInfo.xml`, which an EPUB uses as its chapters when there are any, are not
+  used for a PDF; its chapters come from the folders.
+
+The EPUB and the CBZ are not changed. The code that names a chapter and groups chapters by volume
+is now shared between the EPUB's navigation and the PDF's bookmarks (the EPUB written is
+byte-identical to 0.8.1's), and the release notes of 0.8.1 already say that its PNG files are not
+byte-identical to 0.8.0's.
+
+The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit before
+publication, including extended comparisons and complete-book EPUB conformance.
+
+Mangabound's pinned toolchain will be updated separately; publishing this CLI release does not
+change the desktop application until its pin moves.
+
 ## 0.8.1
 
 This patch release fixes the page order of a CBZ made from a whole series, and updates `zip`
