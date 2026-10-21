@@ -50,7 +50,9 @@ the pixel, and with it where the crop or the cut falls.
   features. No assembler is needed, every target decodes alike, and the C path gives Pillow's
   pixels as above. The program stays one static binary with nothing to install (ADR 0001); what
   changes is that building it needs a C compiler, which each release runner has (MSVC on Windows,
-  Xcode's clang for both macOS targets, `musl-tools` for Linux).
+  Xcode's clang for both macOS targets, `musl-tools` for Linux). CI builds the two release targets
+  its test matrix does not (Linux on musl, Intel macOS cross-built on Apple Silicon) on every change,
+  and runs the decoding tests on musl, so a C build that breaks is seen before a tag.
 - **The webtoon comparison reads strips as the program does.** `parity_dump --webtoon-dir` opened
   the strips with `image::open`, so it compared the `image` crate's decoding, not the program's.
   Both now go through `webtoon::decode_strip_image`.

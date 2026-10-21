@@ -43,6 +43,49 @@ jobs:
       - name: Installer regression tests
         run: python -m unittest discover -s tools/installers -p "test_*.py" -v
 
+  release-targets:
+    # The release builds two targets the test matrix above does not: Linux on musl, and Intel
+    # macOS cross-built on Apple Silicon. JPEG decoding is built from C (ADR 0028), so both are
+    # built on every change instead of first at a tag, and the decoding tests run on musl. A tag
+    # skips this: its release workflow builds every target itself.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-14
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Install the repository toolchain and the target
+        env:
+          RELEASE_TARGET: ${{ matrix.target }}
+        run: |
+          rustup toolchain install --no-self-update
+          rustup target add "$RELEASE_TARGET"
+        shell: bash
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: release-${{ matrix.target }}
+      - name: Build
+        env:
+          RELEASE_TARGET: ${{ matrix.target }}
+        run: cargo build --release --locked --target "$RELEASE_TARGET" -p mangapress-cli
+        shell: bash
+      - name: Decode JPEG on musl
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          cargo test --release --locked --target x86_64-unknown-linux-musl -p mangapress-core --lib input::
+
   dependency-notices:
     runs-on: ${{ matrix.os }}
     strategy:
