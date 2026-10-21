@@ -759,6 +759,7 @@ dependencies = [
  "anyhow",
  "clap",
  "image",
+ "lopdf",
  "mangapress-core",
  "rayon",
  "roxmltree",
@@ -773,6 +774,7 @@ version = "0.8.1"
 dependencies = [
  "image",
  "jpeg-encoder",
+ "lopdf",
  "png",
  "printpdf",
  "roxmltree",

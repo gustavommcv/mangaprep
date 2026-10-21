@@ -64,8 +64,8 @@ pub(super) fn resolve(cli: Cli, failure: &mut RunFailure) -> anyhow::Result<Reso
 
     let mut cli = cli;
     if cli.format == Format::Auto {
-        // Only an EPUB has a two-level table of contents (ADR 0012), so asking for one is
-        // asking for an EPUB.
+        // A two-level table of contents is an EPUB's (ADR 0012) or a PDF's (ADR 0026), and the
+        // one `auto` has always meant is the EPUB's, so asking for one is asking for an EPUB.
         cli.format = if cli.nested_toc {
             Format::Epub
         } else {
@@ -94,22 +94,18 @@ pub(super) fn resolve(cli: Cli, failure: &mut RunFailure) -> anyhow::Result<Reso
         );
     }
 
-    if cli.nested_toc && cli.format != Format::Epub {
+    if cli.nested_toc && cli.format == Format::Cbz {
         *failure = RunFailure::new(
             "nested_toc_unsupported_format",
             "configuration",
             true,
-            "A two-level table of contents is only available for EPUB output right now.",
-            format!(
-                "--nested-toc was combined with --format {:?}, which has no chapter/volume table of \
-                 contents mechanism yet — see docs/adr/0012-nested-toc-for-combined-volumes.md",
-                cli.format
-            ),
+            "A two-level table of contents is only available for EPUB and PDF output.",
+            "--nested-toc was combined with --format cbz, which has no table of contents or \
+             bookmarks to nest — see docs/adr/0012-nested-toc-for-combined-volumes.md and \
+             docs/adr/0026-a-pdf-has-bookmarks.md"
+                .to_string(),
         );
-        bail!(
-            "--nested-toc requires --format epub, got --format {:?}",
-            cli.format
-        );
+        bail!("--nested-toc requires --format epub or --format pdf, got --format cbz");
     }
 
     Ok(ResolvedConversion {

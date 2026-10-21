@@ -121,7 +121,7 @@ fn configuration_errors_keep_precedence_before_inspection_or_output_staging() {
             vec!["--profile", "KDX", "--format", "cbz", "--nested-toc"],
             "nested_toc_unsupported_format",
             "configuration",
-            "--nested-toc requires --format epub, got --format Cbz",
+            "--nested-toc requires --format epub or --format pdf, got --format cbz",
         ),
     ] {
         for machine in [false, true] {

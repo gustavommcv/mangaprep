@@ -59,7 +59,7 @@ KCC flags. Core and CLI tests cover them; they are not advertised as direct KCC 
 Labelled-spread joining is shared behavior but remains Rust-only: KCC flattens chapter folders,
 whereas mangapress preserves them. Covers-folder selection also deliberately differs.
 
-PDF serialization is not compared: Rust tests validate mangapress's PDF output. The oracle never
+PDF serialization is not compared: Rust tests validate mangapress's PDF output, and its bookmarks, which KCC's PDF does not have (ADR 0026). The oracle never
 calls its placeholder PDF or MozJPEG imports. MOBI/AZW3, Panel View, Scribe Amazon page splitting,
 light novels, archive/PDF/EPUB input variants beyond mangapress's scope, deletion, batch splitting,
 file fusion, target-size limits, MozJPEG and WebP output are excluded/deferred by ADR 0013/0014,

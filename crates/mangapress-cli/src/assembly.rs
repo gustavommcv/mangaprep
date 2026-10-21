@@ -220,6 +220,7 @@ fn package_bytes(
             &pdf::PdfOptions {
                 title: title.clone(),
                 author: author.clone(),
+                nested_toc: cli.nested_toc,
             },
         )?,
     };

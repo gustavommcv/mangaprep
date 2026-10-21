@@ -24,3 +24,4 @@ tempfile = { workspace = true }
 image = { workspace = true }
 zip = { workspace = true }
 roxmltree = { workspace = true }
+lopdf = { workspace = true }
