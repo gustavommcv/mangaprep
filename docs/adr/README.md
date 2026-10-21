@@ -25,4 +25,5 @@
 23. [Give a page's wrapper no line height, so KOReader does not draw the page 12 px short](0023-no-line-height-around-a-page-image.md) — narrow exception to 13
 24. [`--format auto` gives CBZ for every Kindle](0024-auto-format-is-cbz.md) — replaces a row of 13
 25. [A CBZ keeps its chapters in the folders they were in](0025-a-cbz-keeps-its-chapters-in-the-folders-they-were-in.md) — applies a row of 13
-26. [A PDF has bookmarks](0026-a-pdf-has-bookmarks.md) — adds a difference to 13, replaces a part of 12
+26. [A PDF has bookmarks](0026-a-pdf-has-bookmarks.md) — adds a difference to 13, replaces a part of 12; how the PDF is saved replaced by 27
+27. [A PDF keeps each page as it was made](0027-a-pdf-keeps-each-page-as-it-was-made.md) — applies a row of 13, replaces a part of 26; removes the `printpdf` dependency
