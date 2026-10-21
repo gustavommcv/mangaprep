@@ -8,6 +8,7 @@
 //! `docs/adr/0008-mobi-azw3-permanently-out-of-scope.md`.
 
 pub mod cbz_out;
+mod contents;
 pub mod cover;
 pub mod epub;
 pub mod pdf;
