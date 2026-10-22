@@ -51,18 +51,19 @@ manually rather than bypassing verification.
 To select a published version, set `MANGAPRESS_VERSION` (with or without its `v` prefix):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.2 sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.3 sh
 ```
 
 ```powershell
-$env:MANGAPRESS_VERSION = 'v0.8.2'
+$env:MANGAPRESS_VERSION = 'v0.8.3'
 irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
 ```
 
 Unset the variable or use `latest` to return to the latest release. For automated Windows
 installations that should not change the user `Path`, set `MANGAPRESS_NO_PATH_UPDATE=1`.
 
-With the Rust version listed in [contributor setup](CONTRIBUTING.md#setup-and-checks),
+With the Rust version listed in [contributor setup](CONTRIBUTING.md#setup-and-checks) and a
+C compiler (JPEG pages are decoded by libjpeg-turbo, built from its C sources into the program),
 you can also build the current development version:
 
 ```sh

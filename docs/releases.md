@@ -18,6 +18,48 @@ Only the publication job has repository write permission. It downloads the `mang
 package artifacts, not the separate CI license reports, generates checksums, and requires
 the release tag to exist. Archive names and installer entry points are unchanged.
 
+## 0.8.3
+
+This release makes the PDF and the reading of JPEG pages match KCC 12.0.0, after the first
+comparison with it on real manga ([audit-2026-10-21-real-manga.md](audit-2026-10-21-real-manga.md)).
+It adds and removes no CLI flags or output formats, and JSON protocol version 1 is unchanged.
+
+Release highlights:
+
+- **A PDF keeps every page at full resolution.** The PDF library's default options shrank any page
+  image over about 2 MB of pixels, and the reader stretched it back: a Kindle Paperwhite 6 page
+  (1272×1696) was stored at 1254×1672, an upscaled Kindle Scribe 3 page (1986×2648) at 1254×1672,
+  and a Kobo Libra Colour page (1264×1680) at 725×964. Each page is now the same image as in the
+  CBZ or EPUB of the book. Pages of 1072×1448 (Kindle 11) were not affected.
+- **A PDF holds each page's own JPEG**, as KCC's does, instead of its pixels stored again: about
+  the size of KCC's (Uzumaki volume 1 on the Kindle 11: 96.9 MB, where 0.8.2 made 216.1 MB and KCC
+  94.8 MB), and made several times faster. Each page names only its own image, and its size is a
+  whole number of points. The bookmarks are unchanged. The PDF is written with `lopdf`, and the
+  `printpdf` dependency is gone ([ADR 0027](adr/0027-a-pdf-keeps-each-page-as-it-was-made.md)).
+- **JPEG pages are decoded by libjpeg-turbo**, as Pillow decodes them for KCC, so they are read as
+  KCC reads them, pixel for pixel. The decoder used before landed within a few levels of it: never
+  visible, but where a margin or a gap between panels sat at a threshold, one page in about 960 was
+  cropped a column narrower than KCC's, and 2 of 300 cuts of a webtoon chapter moved by 8 px. Pages
+  made from JPEG files may therefore differ from 0.8.2's by a few levels, now as KCC's are; pages
+  from PNG files are unchanged. A volume of JPEG pages takes 1 to 5% longer
+  ([ADR 0028](adr/0028-decode-jpeg-pages-as-kccs-pillow-does.md)).
+- **Building from source needs a C compiler**, since libjpeg-turbo is compiled into the program.
+  The released binaries still need nothing installed. Its notice (the IJG's and libjpeg-turbo's
+  BSD-3-Clause) is in `DEPENDENCY-LICENSES.txt` and `THIRD-PARTY-NOTICES.md`.
+- KCC's inter-panel crop turns a palette PNG page into its palette indices drawn as grey; mangapress
+  crops it and keeps its tones. This is kept on purpose
+  ([ADR 0029](adr/0029-a-palette-page-is-cropped-between-panels-by-its-colours.md)).
+
+For maintainers: `tools/parity/real_pages.py` and `real_books.py` repeat the comparison on local
+volumes, and the release checks above now ask for it when a release changes processing, decoding or
+book output. CI also builds the musl and Intel macOS release targets on every change.
+
+The reference remains KCC 12.0.0. The tag workflow checks the exact merged release commit before
+publication, including extended comparisons and complete-book EPUB conformance.
+
+Mangabound's pinned toolchain will be updated separately; publishing this CLI release does not
+change the desktop application until its pin moves.
+
 ## 0.8.2
 
 This release gives a PDF bookmarks. It adds and removes no CLI flags or output formats, and JSON

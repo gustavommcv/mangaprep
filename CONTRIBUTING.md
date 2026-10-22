@@ -10,6 +10,10 @@ Use Rust 1.98.1 with rustfmt and Clippy, as selected by
 [rust-toolchain.toml](rust-toolchain.toml) and used in [CI](.github/workflows/ci.yml).
 With rustup installed, run `rustup toolchain install --no-self-update` from the checkout.
 This is also the declared minimum; compatibility with older compilers has not been tested.
+A C compiler is needed too: libjpeg-turbo, which decodes JPEG pages as KCC's Pillow does
+([ADR 0028](docs/adr/0028-decode-jpeg-pages-as-kccs-pillow-does.md)), is built from its C
+sources (MSVC on Windows, Xcode's clang on macOS, `gcc` or `musl-gcc` on Linux). No assembler is
+needed.
 From the repository root:
 
 ```sh
