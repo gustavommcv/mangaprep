@@ -124,7 +124,7 @@ def read_pdf(path):
 READERS = {"cbz": read_cbz, "epub": read_epub, "pdf": read_pdf}
 
 
-def compare(theirs, mine, fmt):
+def compare(theirs, mine, fmt, webtoon=False):
     problems, largest = [], 0.0
     if len(theirs["pages"]) != len(mine["pages"]):
         return [f"pages: KCC {len(theirs['pages'])}, mangapress {len(mine['pages'])}"], largest
@@ -142,6 +142,10 @@ def compare(theirs, mine, fmt):
         if difference > (COLOUR_LIMIT if mode == "RGB" else GRAY_LIMIT):
             problems.append(f"page {number}: pixels differ by {difference:.2f} levels on average")
     for key in theirs["meta"]:
+        if webtoon and key == "cover":
+            # KCC's webtoon EPUB declares no cover, and mangapress's does: TOC-4 of ADR 0019, kept on
+            # purpose.
+            continue
         if theirs["meta"][key] != mine["meta"].get(key):
             problems.append(f"{key}: KCC {theirs['meta'][key]}, mangapress {mine['meta'].get(key)}")
     if fmt == "epub" and theirs["contents"] != mine["contents"]:
@@ -194,7 +198,7 @@ def main():
                 run([mangapress, book, *our_flags, *webtoon[1], "--format", fmt, "--output", ours,
                      f"--title={title}", f"--author={AUTHOR}"])
                 theirs_path = max((os.path.join(kcc_dir, name) for name in os.listdir(kcc_dir)), key=os.path.getsize)
-                problems, largest = compare(READERS[fmt](theirs_path), READERS[fmt](ours), fmt)
+                problems, largest = compare(READERS[fmt](theirs_path), READERS[fmt](ours), fmt, args.webtoon)
                 sizes = os.path.getsize(theirs_path), os.path.getsize(ours)
                 if max(sizes) > SIZE_RATIO * min(sizes):
                     problems.append(f"file size: KCC {sizes[0] / 1e6:.1f} MB, mangapress {sizes[1] / 1e6:.1f} MB")
