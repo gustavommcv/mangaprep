@@ -26,6 +26,11 @@ of the integer DCT of libjpeg (through mozjpeg). The IJG's license text, which t
 carries in the header of that file, is reproduced in `DEPENDENCY-LICENSES.txt` with the
 crate's MIT and Apache-2.0 licenses.
 
+JPEG pages are decoded by [libjpeg-turbo](https://libjpeg-turbo.org/), as Pillow decodes them for
+KCC, through the [`mozjpeg`](https://github.com/kornelski/mozjpeg-sys) crates, which build it
+from its C sources into the program. Its notice, the IJG's and libjpeg-turbo's own BSD-3-Clause
+license, is reproduced in `DEPENDENCY-LICENSES.txt`.
+
 ## KCC (Kindle Comic Converter)
 
 <https://github.com/ciromattia/kcc>

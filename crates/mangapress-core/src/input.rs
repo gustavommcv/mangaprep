@@ -81,12 +81,57 @@ pub(crate) struct DecodedPage {
 
 /// Decode through the image crate, preserving its default allocation checks
 /// as well as checking the pixel count before allocating the output buffer.
+/// A gray or color JPEG is decoded by libjpeg-turbo instead, once its header
+/// has passed the same checks (see [`decode_jpeg_as_kcc`]).
 fn decode_whole(bytes: &[u8]) -> Result<DynamicImage> {
     let mut decoder = decoder(bytes, MAX_IMAGE_PIXELS)?;
     let mut limits = Limits::default();
     limits.reserve(decoder.total_bytes())?;
+    if let Some(image) = decode_jpeg_as_kcc(bytes) {
+        return Ok(image);
+    }
     decoder.set_limits(limits)?;
     Ok(DynamicImage::from_decoder(decoder)?)
+}
+
+/// A JPEG decoded as Pillow decodes it for KCC: by libjpeg-turbo, with its accurate integer
+/// transform and smooth chroma upsampling. Other decoders land within a few levels of it, which
+/// is invisible, but a level decides a pixel where a margin or a gap between panels is at a
+/// threshold, so the crop or the webtoon cut would move (ADR 0028).
+///
+/// Gray, YCbCr and RGB files only. `None` for anything else (CMYK, YCCK) and for a file
+/// libjpeg-turbo refuses; the image crate then decodes it, or refuses it, as it always has.
+fn decode_jpeg_as_kcc(bytes: &[u8]) -> Option<DynamicImage> {
+    use mozjpeg::{ColorSpace, Decompress};
+
+    if !bytes.starts_with(&[0xFF, 0xD8]) {
+        return None;
+    }
+    // libjpeg reports an error by unwinding out of its C code (the `mozjpeg` crate's design);
+    // the unwind skips the panic hook, so nothing is printed.
+    std::panic::catch_unwind(|| -> std::io::Result<Option<DynamicImage>> {
+        let decompress = Decompress::new_mem(bytes)?;
+        let gray = match decompress.color_space() {
+            ColorSpace::JCS_GRAYSCALE => true,
+            ColorSpace::JCS_YCbCr | ColorSpace::JCS_RGB => false,
+            _ => return Ok(None),
+        };
+        let mut started = if gray {
+            decompress.grayscale()?
+        } else {
+            decompress.rgb()?
+        };
+        let (width, height) = (started.width() as u32, started.height() as u32);
+        let pixels = started.read_scanlines::<u8>()?;
+        started.finish()?;
+        Ok(if gray {
+            image::GrayImage::from_raw(width, height, pixels).map(DynamicImage::ImageLuma8)
+        } else {
+            image::RgbImage::from_raw(width, height, pixels).map(DynamicImage::ImageRgb8)
+        })
+    })
+    .ok()?
+    .ok()?
 }
 
 /// Decode a page. A PNG or GIF whose pixel data ends early is not refused, as KCC does not

@@ -27,3 +27,4 @@
 25. [A CBZ keeps its chapters in the folders they were in](0025-a-cbz-keeps-its-chapters-in-the-folders-they-were-in.md) — applies a row of 13
 26. [A PDF has bookmarks](0026-a-pdf-has-bookmarks.md) — adds a difference to 13, replaces a part of 12; how the PDF is saved replaced by 27
 27. [A PDF keeps each page as it was made](0027-a-pdf-keeps-each-page-as-it-was-made.md) — applies a row of 13, replaces a part of 26; removes the `printpdf` dependency
+28. [Decode JPEG pages with libjpeg-turbo, as KCC's Pillow does](0028-decode-jpeg-pages-as-kccs-pillow-does.md) — applies 13; adds the `mozjpeg` dependency
