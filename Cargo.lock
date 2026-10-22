@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "mangapress-cli"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -690,7 +690,7 @@ dependencies = [
 
 [[package]]
 name = "mangapress-core"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "image",
  "jpeg-encoder",
