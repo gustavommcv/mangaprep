@@ -103,7 +103,7 @@ CASES = [
     Case("EPUB: stored forms of a page, full-tone gray", kcc=FULL_TONE, ours=FULL_TONE, pages="decoded inputs"),
     Case("EPUB: page shapes, cropped as by default", kcc=FULL_TONE, ours=FULL_TONE, pages="geometry", crop=True),
     Case("EPUB: gray-or-colour decision, gray output", kcc=FULL_TONE, ours=FULL_TONE, pages="colour decision"),
-    # The book Mangabound hands over: no ComicInfo.xml, the author given on the command line.
+    # The book Manga2Ink hands over: no ComicInfo.xml, the author given on the command line.
     Case("EPUB: a Mangabind volume as a .cbz", kcc=FULL_TONE + AUTHOR, ours=FULL_TONE + AUTHOR,
          tree=book_tree(MANGABIND_VOLUME, info=None), archive=True),
     Case("EPUB: pages lying directly in the book are listed under its title", kcc=FULL_TONE, ours=FULL_TONE,

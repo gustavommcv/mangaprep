@@ -11,7 +11,7 @@ device profile for Kindle, Kobo, reMarkable, or other screens, or set your own p
 It is a standalone command-line tool written in Rust, with image processing based on
 [Kindle Comic Converter](https://github.com/ciromattia/kcc). Use it directly with a CBZ or image
 folder, after [Mangabind](https://github.com/gustavommcv/mangabind) groups chapters into volumes,
-or through the [Mangabound](https://github.com/gustavommcv/mangabound) desktop app.
+or through the [Manga2Ink](https://github.com/gustavommcv/manga2ink) desktop app.
 
 [Download](https://github.com/gustavommcv/mangapress/releases/latest) ·
 [Get started](#usage) · [Contribute](CONTRIBUTING.md)
