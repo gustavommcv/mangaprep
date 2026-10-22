@@ -28,3 +28,4 @@
 26. [A PDF has bookmarks](0026-a-pdf-has-bookmarks.md) — adds a difference to 13, replaces a part of 12; how the PDF is saved replaced by 27
 27. [A PDF keeps each page as it was made](0027-a-pdf-keeps-each-page-as-it-was-made.md) — applies a row of 13, replaces a part of 26; removes the `printpdf` dependency
 28. [Decode JPEG pages with libjpeg-turbo, as KCC's Pillow does](0028-decode-jpeg-pages-as-kccs-pillow-does.md) — applies 13; adds the `mozjpeg` dependency
+29. [A palette page is cropped between panels by its colours, not by its palette indices](0029-a-palette-page-is-cropped-between-panels-by-its-colours.md) — adds a difference kept on purpose to 19

@@ -41,6 +41,31 @@ A failing comparison exits nonzero.
 Inspect the generated PNGs from both tools when investigating a difference. Keep private pages
 outside the repository; the built-in corpus uses generated images.
 
+## Real manga
+
+The matrix above runs on drawn pages. Before a release that changes processing, decoding or book
+output, compare real volumes too, kept outside the repository. Install the extra dependencies of
+KCC's own CLI first (PyMuPDF for its PDF, MozJPEG's optimizer for its JPEG pages):
+
+```sh
+python -m pip install -r tools/parity/requirements-real.txt
+```
+
+- `real_pages.py --pages DIR` (one folder of pages per book, repeatable) compares each page with
+  the options KCC's window starts with on each device, read from the KCC checkout, on
+  `--profiles` (default `K11,KPW6,KS3,KoLC,K810,RmkPPMove`). `--sweep` runs every page scenario of
+  the matrix on the first profile instead, over `--sample` pages of each book plus every spread.
+  `--webtoon DIR` (a folder of strips) checks merging and cutting exactly, then the cut pages.
+  The pages that differ most are listed at the end.
+- `real_books.py --book FILE` (a `.cbz` or a folder of chapters, repeatable) makes the same book
+  with KCC's CLI and with mangapress in `--formats` (default `cbz,epub,pdf`) and compares the pages
+  in reading order, their sizes and decoded pixels, an EPUB's contents and metadata, a PDF's page
+  sizes and metadata, and the size of the files. `--webtoon` turns on webtoon mode on both sides.
+  KCC reads a `.cbz` with 7-Zip.
+
+[audit-2026-10-21-real-manga.md](../../docs/audit-2026-10-21-real-manga.md) is the first such
+comparison and what it found.
+
 For example, check the DX's CBZ behavior or run the small matrix on a Kobo:
 
 ```sh
