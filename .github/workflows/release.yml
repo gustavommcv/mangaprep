@@ -93,7 +93,7 @@ jobs:
           target: ${{ matrix.target }}
 
       # The licenses and third-party notices travel with the binary: the
-      # notices' own terms ask for that. Installers and Mangabound take the
+      # notices' own terms ask for that. Installers and Manga2Ink take the
       # executable by name, so the extra files are inert to them.
       - name: Package (unix)
         if: runner.os != 'Windows'
