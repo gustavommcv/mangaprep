@@ -79,12 +79,12 @@ jobs:
       - name: Build
         env:
           RELEASE_TARGET: ${{ matrix.target }}
-        run: cargo build --release --locked --target "$RELEASE_TARGET" -p mangapress-cli
+        run: cargo build --release --locked --target "$RELEASE_TARGET" -p mangaprep-cli
         shell: bash
       - name: Decode JPEG on musl
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
-          cargo test --release --locked --target x86_64-unknown-linux-musl -p mangapress-core --lib input::
+          cargo test --release --locked --target x86_64-unknown-linux-musl -p mangaprep-core --lib input::
 
   dependency-notices:
     runs-on: ${{ matrix.os }}

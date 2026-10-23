@@ -1,6 +1,6 @@
-# Comparing mangapress with KCC
+# Comparing mangaprep with KCC
 
-These tools run mangapress and [KCC](https://github.com/ciromattia/kcc) **12.1.1** on the same
+These tools run mangaprep and [KCC](https://github.com/ciromattia/kcc) **12.1.1** on the same
 synthetic images and compare processed pages and books produced by the real CLIs. Use them for
 image-processing, metadata, and book-output changes. They run separately from `cargo test`.
 The [coverage map](coverage.md) distinguishes direct comparisons, Rust tests, and remaining gaps.
@@ -8,7 +8,7 @@ The [coverage map](coverage.md) distinguishes direct comparisons, Rust tests, an
 ## Run the comparison
 
 You need the [repository's Rust toolchain](../../CONTRIBUTING.md#setup-and-checks) and Python 3.
-From the mangapress repository root, install the
+From the mangaprep repository root, install the
 development-only comparison dependencies and clone the reference into a separate folder.
 Use a virtual environment if you do not want to change your Python installation:
 
@@ -59,7 +59,7 @@ python -m pip install -r tools/parity/requirements-real.txt
   `--webtoon DIR` (a folder of strips) checks merging and cutting exactly, then the cut pages.
   The pages that differ most are listed at the end.
 - `real_books.py --book FILE` (a `.cbz` or a folder of chapters, repeatable) makes the same book
-  with KCC's CLI and with mangapress in `--formats` (default `cbz,epub,pdf`) and compares the pages
+  with KCC's CLI and with mangaprep in `--formats` (default `cbz,epub,pdf`) and compares the pages
   in reading order, their sizes and decoded pixels, an EPUB's contents and metadata, a PDF's page
   sizes and metadata, and the size of the files. `--webtoon` turns on webtoon mode on both sides.
   KCC reads a `.cbz` with 7-Zip.
@@ -93,14 +93,14 @@ Palette dithering, webtoon joining, and webtoon splitting have separate pixel-ex
 The dither checks use 16-, 15-, and 4-level palettes.
 
 Both sides are compared before their JPEG step: KCC's driver stops short of its save, and the
-mangapress side is written as lossless PNG (`parity_dump --lossless`) unless the scenario is about
+mangaprep side is written as lossless PNG (`parity_dump --lossless`) unless the scenario is about
 PNG output. What is compared is the processing, not the codec; the codec has its own checks in the
 book comparisons below (quantization tables, chroma layout, scans, size, pixels). Most scenarios
 come out at a mean difference of 0.00 and none above 0.30; the tolerance is kept wide enough for
 the resampler and the dither, not for an encoder. A passing comparison applies to the tested
 scenarios; it is not a guarantee for every image, option, or device.
 
-Book comparisons run KCC's actual CLI entry point and the built mangapress executable on small
+Book comparisons run KCC's actual CLI entry point and the built mangaprep executable on small
 chapter folders. They read each generated archive and compare:
 
 - ordered page images, geometry, grayscale/color classification, and decoded pixels;
@@ -123,14 +123,14 @@ output pages so that reading and processing are compared, not compression:
   a wide page becomes a spread and where a spread is cut in two, and around the screen;
 - **the gray-or-color decision**: a page on each side of every boundary of that decision.
 
-Only KCC's documented Kindle GIF versus mangapress PNG difference is allowed between page
+Only KCC's documented Kindle GIF versus mangaprep PNG difference is allowed between page
 codecs in the tested Kindle EPUBs. UUIDs, generator names, timestamps, internal filenames,
 and ZIP serialization are not compared. Image tolerances are the same as the page checks.
 Page sides compare their meaning after normalizing the `rendition:` prefix: Kindle centered
 items use the standard prefixed property, not KCC's undefined bare spelling
 ([ADR 0018](../../docs/adr/0018-standard-centered-spine-property.md)). Exact spelling has Rust
 regression tests. The independent [EPUBCheck gate](../epubcheck/README.md) validates selected
-complete mangapress EPUBs; this comparison does not replace conformance validation.
+complete mangaprep EPUBs; this comparison does not replace conformance validation.
 Negative-control tests ensure missing/reordered pages, broken references, changed metadata,
 wrong codecs/quality, and altered passthrough bytes cannot produce a successful comparison.
 
@@ -206,7 +206,7 @@ Changing `rust-toolchain.toml` triggers the PR/main comparison as well.
 - [kcc_oracle.py](kcc_oracle.py): calls KCC from its checkout.
 - [make_corpus.py](make_corpus.py): generates the test images.
 - [book_inputs.py](book_inputs.py): generates the books of stored forms, shapes and decision boundaries.
-- [parity_dump.rs](../../crates/mangapress-core/examples/parity_dump.rs): runs mangapress's pipeline
+- [parity_dump.rs](../../crates/mangaprep-core/examples/parity_dump.rs): runs mangaprep's pipeline
   and writes pages for comparison.
 
 The [licensing boundary](../../docs/adr/0007-gplv3-boundary-kcc-image-rs.md) applies here too.

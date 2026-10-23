@@ -1,10 +1,10 @@
-# mangapress
+# mangaprep
 
-[![CI](https://github.com/gustavommcv/mangapress/actions/workflows/ci.yml/badge.svg)](https://github.com/gustavommcv/mangapress/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/gustavommcv/mangapress)](https://github.com/gustavommcv/mangapress/releases/latest)
+[![CI](https://github.com/gustavommcv/mangaprep/actions/workflows/ci.yml/badge.svg)](https://github.com/gustavommcv/mangaprep/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/gustavommcv/mangaprep)](https://github.com/gustavommcv/mangaprep/releases/latest)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
-mangapress converts manga and comics into EPUB, CBZ, or PDF books for your e-reader. It crops
+mangaprep converts manga and comics into EPUB, CBZ, or PDF books for your e-reader. It crops
 margins, sizes pages for your screen, adjusts contrast, and handles double-page spreads. Choose a
 device profile for Kindle, Kobo, reMarkable, or other screens, or set your own page dimensions.
 
@@ -13,83 +13,88 @@ It is a standalone command-line tool written in Rust, with image processing base
 folder, after [Mangabind](https://github.com/gustavommcv/mangabind) groups chapters into volumes,
 or through the [Manga2Ink](https://github.com/gustavommcv/manga2ink) desktop app.
 
-[Download](https://github.com/gustavommcv/mangapress/releases/latest) ·
+mangaprep was called **mangapress** up to version 0.8.3. It is the same project: the name changed
+because another one already used it ([ADR 0031](docs/adr/0031-rename-to-mangaprep.md)). The
+executable, the release files and the installer's variables have the new name; the releases up to
+0.8.3 keep the old one.
+
+[Download](https://github.com/gustavommcv/mangaprep/releases/latest) ·
 [Get started](#usage) · [Contribute](CONTRIBUTING.md)
 
 ## Install
 
-Download and extract a package from [GitHub Releases](https://github.com/gustavommcv/mangapress/releases/latest),
+Download and extract a package from [GitHub Releases](https://github.com/gustavommcv/mangaprep/releases/latest),
 or use the install script below. Packages are available for Windows x64, Linux x64, and macOS
 on Intel and Apple Silicon. Running a release does not require Rust.
 
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.ps1 | iex
 ```
 
 The scripts install the latest release to `~/.local/bin` on macOS/Linux or
-`%LOCALAPPDATA%\Programs\mangapress` on Windows. Follow the printed `PATH` instructions if needed;
+`%LOCALAPPDATA%\Programs\mangaprep` on Windows. Follow the printed `PATH` instructions if needed;
 on Windows, restart your terminal after installation. The Unix install folder can be changed with
-`MANGAPRESS_INSTALL_DIR`; the same variable also works on Windows.
+`MANGAPREP_INSTALL_DIR`; the same variable also works on Windows.
 
 The installers resolve the release once, verify the selected package against that release's
 `checksums.txt`, and check the executable's version before replacing an installation. Missing
 checksums or failed verification stop installation. This checks download integrity, not signed
 authenticity: the package and checksums are published by the same repository.
 Archives contain the executable, license texts, and [third-party notices](THIRD-PARTY-NOTICES.md).
-The Unix installer keeps the included notices in `mangapress-licenses` inside the install folder;
+The Unix installer keeps the included notices in `mangaprep-licenses` inside the install folder;
 Windows keeps them beside the executable. Older releases without a checksum file must be installed
 manually rather than bypassing verification.
 
-To select a published version, set `MANGAPRESS_VERSION` (with or without its `v` prefix):
+To select a published version, set `MANGAPREP_VERSION` (with or without its `v` prefix):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | MANGAPRESS_VERSION=v0.8.3 sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.sh | MANGAPREP_VERSION=v0.8.3 sh
 ```
 
 ```powershell
-$env:MANGAPRESS_VERSION = 'v0.8.3'
-irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
+$env:MANGAPREP_VERSION = 'v0.8.3'
+irm https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.ps1 | iex
 ```
 
 Unset the variable or use `latest` to return to the latest release. For automated Windows
-installations that should not change the user `Path`, set `MANGAPRESS_NO_PATH_UPDATE=1`.
+installations that should not change the user `Path`, set `MANGAPREP_NO_PATH_UPDATE=1`.
 
 With the Rust version listed in [contributor setup](CONTRIBUTING.md#setup-and-checks) and a
 C compiler (JPEG pages are decoded by libjpeg-turbo, built from its C sources into the program),
 you can also build the current development version:
 
 ```sh
-cargo install --git https://github.com/gustavommcv/mangapress --locked mangapress-cli
+cargo install --git https://github.com/gustavommcv/mangaprep --locked mangaprep-cli
 ```
 
 ### Update
 
-Repeat the installation command you used. Check the installed version with `mangapress --version`.
+Repeat the installation command you used. Check the installed version with `mangaprep --version`.
 For a Git-based Cargo installation, add `--force` to rebuild the current version.
 
 ### Uninstall
 
-On macOS/Linux, delete `~/.local/bin/mangapress` and `~/.local/bin/mangapress-licenses`,
+On macOS/Linux, delete `~/.local/bin/mangaprep` and `~/.local/bin/mangaprep-licenses`,
 or those same entries in your custom install folder. Do not delete a shared `bin` folder.
-On Windows, delete `%LOCALAPPDATA%\Programs\mangapress` and optionally remove that folder from
+On Windows, delete `%LOCALAPPDATA%\Programs\mangaprep` and optionally remove that folder from
 your user `Path` in Environment Variables. For a shared custom folder, remove only the executable
 and included notices, not the folder itself. For a Cargo installation, run
-`cargo uninstall mangapress-cli`.
+`cargo uninstall mangaprep-cli`.
 
 ## Usage
 
 Convert a volume for the Kindle 11 screen, using the default CBZ format:
 
 ```sh
-mangapress "Volume 1.cbz" --profile K11 --output "Books/Volume 1.cbz"
+mangaprep "Volume 1.cbz" --profile K11 --output "Books/Volume 1.cbz"
 ```
 
 Missing output folders are created automatically. Input can be a CBZ, a folder
@@ -113,7 +118,7 @@ For a Kobo profile's EPUB, a derived name has each of `/ \ ? % * : ; | " ' > < $
 with one of them in its name, and a KEPUB with a `!` crashes its reader. A name you give is kept
 as given. Keep those characters out of the folders you copy the book to as well.
 Existing files are never replaced, even with an explicit output file: a suffix such as
-` (mangapress)` is added instead, and the command reports the path used.
+` (mangaprep)` is added instead, and the command reports the path used.
 Choose a format supported by your reading app: a Kindle profile sets screen dimensions but
 does not create MOBI or AZW3 files for the Kindle's native reader.
 
@@ -125,14 +130,14 @@ Explicit CBZ with `--nested-toc` is refused; a PDF takes it.
 List device profiles, or preview the chapters, metadata, and output path before converting:
 
 ```sh
-mangapress --list-profiles
-mangapress "Volume 1.cbz" --profile K11 --format epub --dry-run
+mangaprep --list-profiles
+mangaprep "Volume 1.cbz" --profile K11 --format epub --dry-run
 ```
 
 `--dry-run` inspects the book and checks the destination without creating anything. It cannot
 guarantee future write permissions or free space. A real run checks write access before page
 processing, then stages and synchronizes the completed book before publishing it. Run
-`mangapress --help` for the full list of options and defaults.
+`mangaprep --help` for the full list of options and defaults.
 
 The Kindle DX/DXG profile keeps its built-in 824 × 1000 size in `--list-profiles`. For CBZ
 output (including `auto`), it targets 824 × 1200, as KCC 12.1.1 does. Setting either custom
@@ -171,12 +176,12 @@ The help also covers contrast, crop tuning, borders, cover cropping, and spread 
 Use `OTHER` with both dimensions, in pixels. A named profile also accepts dimension overrides.
 
 ```sh
-mangapress "Volume 1.cbz" --profile OTHER --customwidth 1072 --customheight 1448 --format cbz
+mangaprep "Volume 1.cbz" --profile OTHER --customwidth 1072 --customheight 1448 --format cbz
 ```
 
 ### Covers and metadata
 
-mangapress reads `ComicInfo.xml` for metadata and bookmarks. Use `--metadatatitle` to choose how
+mangaprep reads `ComicInfo.xml` for metadata and bookmarks. Use `--metadatatitle` to choose how
 its title is used, or `--keepcomicinfo` to include the source metadata file in CBZ output.
 
 Without `--cover`, a sibling `Covers` folder is checked for an image matching the input name:
@@ -192,7 +197,7 @@ lists each pair's first page index, starting at zero across the whole book:
 { "spreads": [12, 40] }
 ```
 
-This is the format used by KCC's Label Spreads feature. Without the flag, mangapress looks for
+This is the format used by KCC's Label Spreads feature. Without the flag, mangaprep looks for
 a file named after the input with `.json` appended, such as `Volume 1.cbz.json`.
 
 ### Combine volumes with chapter navigation
@@ -207,7 +212,7 @@ so a reader that orders pages by name, as KOReader does, shows the book in order
 table of contents or bookmarks: for navigation, use EPUB or PDF with `--nested-toc`.
 
 ```sh
-mangapress "Example Series.cbz" --profile K11 --format epub --nested-toc
+mangaprep "Example Series.cbz" --profile K11 --format epub --nested-toc
 ```
 
 Nested navigation needs an EPUB or a PDF; a CBZ is rejected with this option.
@@ -217,9 +222,9 @@ Nested navigation needs an EPUB or a PDF; a CBZ is rejected with this option.
 `--json-events` writes progress, warnings, errors, and results as JSON Lines to stdout:
 
 ```sh
-mangapress "Volume 1.cbz" --profile K11 --format epub --json-events
-mangapress --list-profiles --json-events
-mangapress --protocol-version
+mangaprep "Volume 1.cbz" --profile K11 --format epub --json-events
+mangaprep --list-profiles --json-events
+mangaprep --protocol-version
 ```
 
 The [protocol reference](docs/machine-protocol-v1.md) defines the events and compatibility rules.
@@ -252,7 +257,7 @@ available. Pages generated from several images may not have a single original fi
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development, tests, and reporting bugs.
 
-KCC 12.1.1 is the image-processing reference. mangapress is an independent project; the
+KCC 12.1.1 is the image-processing reference. mangaprep is an independent project; the
 [comparison tools](tools/parity/README.md) check selected scenarios against that release.
 [ADR 0013](docs/adr/0013-follow-a-named-kcc-release.md) records the intended compatibility and
 deliberate differences, and [ADR 0007](docs/adr/0007-gplv3-boundary-kcc-image-rs.md) explains the
@@ -260,10 +265,10 @@ implementation and licensing boundary.
 
 ## AI disclosure
 
-Parts of mangapress, including code, tests, and documentation, were written with the help of AI
+Parts of mangaprep, including code, tests, and documentation, were written with the help of AI
 coding assistants. The maintainers direct, review, and test this work, but AI-assisted contributions
 can contain mistakes like any other. If you find a bug or an error in the documentation, please
-[open an issue](https://github.com/gustavommcv/mangapress/issues).
+[open an issue](https://github.com/gustavommcv/mangaprep/issues).
 
 ## License
 

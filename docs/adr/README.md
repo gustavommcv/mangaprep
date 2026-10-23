@@ -30,3 +30,4 @@
 28. [Decode JPEG pages with libjpeg-turbo, as KCC's Pillow does](0028-decode-jpeg-pages-as-kccs-pillow-does.md) — applies 13; adds the `mozjpeg` dependency
 29. [A palette page is cropped between panels by its colours, not by its palette indices](0029-a-palette-page-is-cropped-between-panels-by-its-colours.md) — adds a difference kept on purpose to 19
 30. [Follow KCC 12.1.1](0030-follow-kcc-12-1-1.md) — changes the reference of 13; Kobo names, 16-bit pages, gray before gamma, fixed resolutions
+31. [Rename to mangaprep](0031-rename-to-mangaprep.md) — the tool's name, executable, release files, `tool` of the protocol (still version 1) and repository; the identifiers' namespace is unchanged

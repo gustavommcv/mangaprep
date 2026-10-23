@@ -1,0 +1,27 @@
+[package]
+name = "mangaprep-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI entry point for mangaprep."
+default-run = "mangaprep"
+
+[[bin]]
+name = "mangaprep"
+path = "src/main.rs"
+
+[dependencies]
+mangaprep-core = { path = "../mangaprep-core" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+rayon = { workspace = true }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
+
+[dev-dependencies]
+image = { workspace = true }
+zip = { workspace = true }
+roxmltree = { workspace = true }
+lopdf = { workspace = true }

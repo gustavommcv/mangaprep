@@ -1,6 +1,6 @@
-# mangapress machine protocol version 1
+# mangaprep machine protocol version 1
 
-This document is the normative contract for mangapress's machine-readable interface.
+This document is the normative contract for mangaprep's machine-readable interface.
 
 ## Framing and handshake
 
@@ -8,13 +8,14 @@ Machine output is UTF-8 JSON Lines: every non-empty stdout line is one complete 
 event has:
 
 - `protocol_version`: `1`
-- `tool`: `"mangapress"`
+- `tool`: `"mangaprep"` (`"mangapress"` up to 0.8.3, when the tool had that name; see
+  [ADR 0031](adr/0031-rename-to-mangaprep.md) for why the version stays 1)
 - `tool_version`: the executable's release version
 - `sequence`: a contiguous one-based integer within the process
 - `type`: the event type
 
 ```text
-mangapress --protocol-version
+mangaprep --protocol-version
 ```
 
 returns one `protocol` event whose `capabilities` are `events`, `profiles`, and `nested_toc` (see
@@ -24,8 +25,8 @@ require an exact supported protocol version and separately verify the release ve
 ## Conversion stream
 
 ```text
-mangapress <input> --profile KV --format epub --output <book.epub> --json-events
-mangapress <input> --profile KV --format epub --output <book.epub> --dry-run --json-events
+mangaprep <input> --profile KV --format epub --output <book.epub> --json-events
+mangaprep <input> --profile KV --format epub --output <book.epub> --dry-run --json-events
 ```
 
 The stream contains these event types:
@@ -66,7 +67,7 @@ one-based position within the named chapter.
 
 ## Profiles
 
-`mangapress --list-profiles --json-events` emits `profile` events in the same declaration order as
+`mangaprep --list-profiles --json-events` emits `profile` events in the same declaration order as
 human `--list-profiles`, followed by a result. A profile contains code, display name, width, height,
 gray levels, and family. `OTHER` legitimately reports a zero built-in resolution and requires CLI
 width/height overrides when used for conversion.

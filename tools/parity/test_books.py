@@ -68,7 +68,7 @@ class SemanticComparisonTests(unittest.TestCase):
             return output.getvalue()
 
         books.compare_image(jpeg(), jpeg(), codec=True)
-        with self.assertRaisesRegex(ValueError, "chroma: KCC half size both ways, mangapress full size"):
+        with self.assertRaisesRegex(ValueError, "chroma: KCC half size both ways, mangaprep full size"):
             books.compare_image(jpeg(), jpeg(subsampling=0), codec=True)
         self.assertEqual(books.scan_count(jpeg()), 1)
         self.assertEqual(books.scan_count(jpeg(progressive=True)), books.scan_count(jpeg(progressive=True)))
@@ -234,7 +234,7 @@ xmlns:epub="http://www.idpf.org/2007/ops"><body><nav epub:type="toc"><ol>
                     self.assertEqual(tempfile.gettempdir(), str(temporary.resolve()))
                     for variable in ("TMPDIR", "TEMP", "TMP"):
                         self.assertEqual(os.environ[variable], str(temporary.resolve()))
-                    self.assertEqual(os.environ["MANGAPRESS_PARITY_KCC"], str(checkout.resolve()))
+                    self.assertEqual(os.environ["MANGAPREP_PARITY_KCC"], str(checkout.resolve()))
                     cli = unittest.mock.Mock()
                     cli.main.return_value = 0
                     return "12.1.1", cli, None, None

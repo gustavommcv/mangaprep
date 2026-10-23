@@ -1,0 +1,24 @@
+[package]
+name = "mangaprep-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Manga/comic e-ink conversion pipeline: device profiles, image processing, and EPUB/CBZ/PDF generation."
+
+[dependencies]
+image = { workspace = true }
+png = { workspace = true }
+jpeg-encoder = { workspace = true }
+mozjpeg = { workspace = true }
+mozjpeg-sys = { workspace = true }
+rustfft = { workspace = true }
+zip = { workspace = true }
+thiserror = { workspace = true }
+lopdf = { workspace = true }
+roxmltree = { workspace = true }
+
+[dev-dependencies]
+zip = { workspace = true }
+tempfile = { workspace = true }

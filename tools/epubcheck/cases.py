@@ -167,7 +167,7 @@ def read_events(stdout):
         raise ValueError("missing or invalid CLI event stream")
     for sequence, event in enumerate(events, 1):
         expect((event.get("tool"), event.get("protocol_version"), event.get("sequence")),
-               ("mangapress", 1, sequence), "CLI framing")
+               ("mangaprep", 1, sequence), "CLI framing")
     return events
 
 

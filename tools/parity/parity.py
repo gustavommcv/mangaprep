@@ -1,6 +1,6 @@
-"""Checks mangapress against upstream KCC, page by page.
+"""Checks mangaprep against upstream KCC, page by page.
 
-Runs KCC's own code (from a checkout you provide) and mangapress's real
+Runs KCC's own code (from a checkout you provide) and mangaprep's real
 pipeline over the same pages, under a matrix of options, and fails if they
 disagree on anything that isn't codec or resampler noise:
 
@@ -34,7 +34,7 @@ from kcc_oracle import load_kcc
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 
-# The KCC release mangapress follows. Another version still runs, with a
+# The KCC release mangaprep follows. Another version still runs, with a
 # warning: differences may then be KCC's own between releases.
 REFERENCE_KCC = "12.1.1"
 
@@ -60,14 +60,14 @@ SCENARIOS = [
     ("spreads: split and rotate", "spreads", *SPLIT_BOTH),
     ("spreads: rotated copy first", "spreads", ["-r", "2", "--rotatefirst"], ["--splitter=both", "--rotatefirst"]),
     # On a Kobo profile of the same resolution: for a Kindle's EPUB, KCC caps
-    # an upright spread at 1920px, which mangapress deliberately does not.
+    # an upright spread at 1920px, which mangaprep deliberately does not.
     ("spreads: not rotated", "spreads", ["-r", "2", "--norotate"], ["--splitter=both", "--norotate"], ["-p", "KoC", "-m", "-u", "-f", "EPUB"]),
     ("spreads: rotated clockwise", "spreads", ["-r", "2", "--rotateright"], ["--splitter=both", "--rotateright"]),
     ("strips restacked 2x2", "spreads", ["-r", "2", "--maximizestrips"], ["--splitter=both", "--maximizestrips"]),
     ("crop: margins only", "pages", ["-r", "2", "-c", "1"], ["--splitter=both", "--crop=margins"]),
     ("crop: none", "pages", ["-r", "2", "-c", "0"], ["--splitter=both", "--crop=disabled"]),
     ("crop: power 2", "pages", ["-r", "2", "--cp", "2.0"], ["--splitter=both", "--croppingpower=2.0"]),
-    # KCC takes the minimum as a ratio, mangapress as a percentage.
+    # KCC takes the minimum as a ratio, mangaprep as a percentage.
     ("crop: only when 90% of the page is kept", "pages", ["-r", "2", "--cm", "0.9"], ["--splitter=both", "--croppingminimum=90"]),
     ("crop: 5% of the margin preserved", "pages", ["-r", "2", "--preservemargin", "5"], ["--splitter=both", "--preservemargin=5"]),
     ("crop: between panels, rows", "pages", ["-r", "2", "--ipc", "1"], ["--splitter=both", "--ipc=horizontal"]),
@@ -192,30 +192,30 @@ def comparison_image(path):
 
 def compare_pages(report, name, files, kcc_dir, dump_dir):
     kcc = manifest_pages(kcc_dir, "kcc.json")
-    ours = manifest_pages(dump_dir, "mangapress.json")
+    ours = manifest_pages(dump_dir, "mangaprep.json")
     if not files or len(files) != len(kcc) or len(files) != len(ours):
-        report.fail(name, f"source page count: input {len(files)}, KCC {len(kcc)}, mangapress {len(ours)}")
+        report.fail(name, f"source page count: input {len(files)}, KCC {len(kcc)}, mangaprep {len(ours)}")
         return 0.0
     worst = 0.0
     for path, theirs, mine in zip(files, kcc, ours):
         where = f"{name} / {os.path.basename(path)}"
         if theirs["background"] != mine["background"]:
-            report.fail(where, f"background KCC {theirs['background']}, mangapress {mine['background']}")
+            report.fail(where, f"background KCC {theirs['background']}, mangaprep {mine['background']}")
             continue
         their_roles = [ROLES[piece["mode"]] for piece in theirs["pieces"]]
         my_roles = [piece["role"] for piece in mine["pieces"]]
         if their_roles != my_roles:
-            report.fail(where, f"pages produced: KCC {their_roles}, mangapress {my_roles}")
+            report.fail(where, f"pages produced: KCC {their_roles}, mangaprep {my_roles}")
             continue
         if not their_roles:
             report.fail(where, "pages produced: neither tool returned an output page")
             continue
         for a, b in zip(theirs["pieces"], mine["pieces"]):
             if a["size"] != b["size"]:
-                report.fail(where, f"{ROLES[a['mode']]} size KCC {a['size']}, mangapress {b['size']}")
+                report.fail(where, f"{ROLES[a['mode']]} size KCC {a['size']}, mangaprep {b['size']}")
                 continue
             if a["black_background"] != b["black_background"]:
-                report.fail(where, f"black page background KCC {a['black_background']}, mangapress {b['black_background']}")
+                report.fail(where, f"black page background KCC {a['black_background']}, mangaprep {b['black_background']}")
                 continue
             x = comparison_image(os.path.join(kcc_dir, a["file"]))
             y = comparison_image(os.path.join(dump_dir, b["file"]))
@@ -223,7 +223,7 @@ def compare_pages(report, name, files, kcc_dir, dump_dir):
                 report.fail(where, "encoded image dimensions disagree with the manifest")
                 continue
             if x.mode != y.mode:
-                report.fail(where, f"KCC wrote {x.mode}, mangapress {y.mode}")
+                report.fail(where, f"KCC wrote {x.mode}, mangaprep {y.mode}")
                 continue
             difference = np.abs(np.asarray(x, dtype=np.int16) - np.asarray(y, dtype=np.int16)).mean()
             worst = max(worst, difference)
@@ -264,7 +264,7 @@ def main():
     oracle = [sys.executable, os.path.join(HERE, "kcc_oracle.py"), kcc]
 
     print("building parity_dump ...")
-    run(["cargo", "build", "--release", "--locked", "-p", "mangapress-core", "--example", "parity_dump"], cwd=REPO)
+    run(["cargo", "build", "--release", "--locked", "-p", "mangaprep-core", "--example", "parity_dump"], cwd=REPO)
     dump = os.path.join(REPO, "target", "release", "examples", "parity_dump" + (".exe" if os.name == "nt" else ""))
 
     corpus = make_corpus.write(os.path.join(work, "corpus"))
@@ -285,7 +285,7 @@ def main():
         files = corpus[key]
         list_file = os.path.join(work, f"list_{key}.txt")
         Path(list_file).write_text("\n".join(files) + "\n", encoding="utf-8")
-        kcc_dir, dump_dir = os.path.join(work, f"{index:02d}_kcc"), os.path.join(work, f"{index:02d}_mangapress")
+        kcc_dir, dump_dir = os.path.join(work, f"{index:02d}_kcc"), os.path.join(work, f"{index:02d}_mangaprep")
         kcc_base, dump_base = scenario_bases(args.profile, bases)
         run(oracle + [kcc_dir, list_file] + kcc_base + kcc_extra)
         if name == "default options":
@@ -334,7 +334,7 @@ def main():
             ["-p", args.profile, "-w", "-f", "EPUB", "unused-input"]))
         width, height = webtoon_options.profileData[1]
         for name, chapter in corpus["webtoon"].items():
-            kcc_dir, dump_dir = os.path.join(work, f"{name}_kcc"), os.path.join(work, f"{name}_mangapress")
+            kcc_dir, dump_dir = os.path.join(work, f"{name}_kcc"), os.path.join(work, f"{name}_mangaprep")
             run(oracle + [kcc_dir, "--webtoon-dir", chapter, str(width), str(height)])
             for stale in (os.listdir(dump_dir) if os.path.isdir(dump_dir) else []):
                 os.unlink(os.path.join(dump_dir, stale))
@@ -346,7 +346,7 @@ def main():
             if not same_image(kcc_dir + "_strip.png", os.path.join(dump_dir, "strip.png")):
                 problem = "merged strips differ"
             elif len(theirs) != len(mine):
-                problem = f"KCC cut {len(theirs)} pages, mangapress {len(mine)}"
+                problem = f"KCC cut {len(theirs)} pages, mangaprep {len(mine)}"
             elif not all(same_image(os.path.join(kcc_dir, a), os.path.join(dump_dir, b)) for a, b in zip(theirs, mine)):
                 problem = "cut pages differ"
             if problem:
@@ -367,7 +367,7 @@ def main():
 
     print()
     if version and version != REFERENCE_KCC:
-        print(f"note: this checkout is KCC {version}; mangapress follows {REFERENCE_KCC}, so a difference may be KCC's own between the two")
+        print(f"note: this checkout is KCC {version}; mangaprep follows {REFERENCE_KCC}, so a difference may be KCC's own between the two")
     if not report.checked and not report.failures:
         report.fail("comparison", "no output pages were checked")
     if report.failures:
@@ -375,7 +375,7 @@ def main():
         for failure in report.failures:
             print("  -", failure)
         raise SystemExit(1)
-    print(f"mangapress matches KCC {version}: {report.checked} checks passed")
+    print(f"mangaprep matches KCC {version}: {report.checked} checks passed")
 
 
 if __name__ == "__main__":

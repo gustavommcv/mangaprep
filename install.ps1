@@ -1,15 +1,15 @@
-# Installs a verified mangapress release for Windows PowerShell 5.1 or PowerShell 7.
-#   irm https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.ps1 | iex
+# Installs a verified mangaprep release for Windows PowerShell 5.1 or PowerShell 7.
+#   irm https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.ps1 | iex
 $ErrorActionPreference = "Stop"
 
-$Repo = "gustavommcv/mangapress"
+$Repo = "gustavommcv/mangaprep"
 $Target = "x86_64-pc-windows-msvc"
-$Asset = "mangapress-$Target.zip"
-$Version = if ($env:MANGAPRESS_VERSION) { $env:MANGAPRESS_VERSION } else { "latest" }
-$InstallDir = if ($env:MANGAPRESS_INSTALL_DIR) {
-    $env:MANGAPRESS_INSTALL_DIR
+$Asset = "mangaprep-$Target.zip"
+$Version = if ($env:MANGAPREP_VERSION) { $env:MANGAPREP_VERSION } else { "latest" }
+$InstallDir = if ($env:MANGAPREP_INSTALL_DIR) {
+    $env:MANGAPREP_INSTALL_DIR
 } else {
-    Join-Path $env:LOCALAPPDATA "Programs\mangapress"
+    Join-Path $env:LOCALAPPDATA "Programs\mangaprep"
 }
 $InstallDir = [System.IO.Path]::GetFullPath($InstallDir)
 
@@ -29,7 +29,7 @@ if ($Version -cnotmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z
 $Url = "https://github.com/$Repo/releases/download/$Version"
 
 $TempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
-$TempName = "mangapress-install-$([Guid]::NewGuid().ToString('N'))"
+$TempName = "mangaprep-install-$([Guid]::NewGuid().ToString('N'))"
 $TempDir = Join-Path $TempRoot $TempName
 New-Item -ItemType Directory -Path $TempDir | Out-Null
 try {
@@ -53,18 +53,18 @@ try {
 
     $StageDir = Join-Path $TempDir "extracted"
     Expand-Archive -LiteralPath $TmpZip -DestinationPath $StageDir
-    $StagedBinary = Join-Path $StageDir "mangapress.exe"
+    $StagedBinary = Join-Path $StageDir "mangaprep.exe"
     $Binary = Get-Item -LiteralPath $StagedBinary
     if ($Binary.PSIsContainer -or ($Binary.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
-        throw "The archive does not contain a regular mangapress.exe executable."
+        throw "The archive does not contain a regular mangaprep.exe executable."
     }
     $ActualVersion = & $StagedBinary --version
-    if ($LASTEXITCODE -ne 0 -or [string]$ActualVersion -cne "mangapress $($Version.Substring(1))") {
+    if ($LASTEXITCODE -ne 0 -or [string]$ActualVersion -cne "mangaprep $($Version.Substring(1))") {
         throw "The downloaded executable does not match $Version."
     }
 
     [System.IO.Directory]::CreateDirectory($InstallDir) | Out-Null
-    Copy-Item -LiteralPath $StagedBinary -Destination (Join-Path $InstallDir "mangapress.exe") -Force
+    Copy-Item -LiteralPath $StagedBinary -Destination (Join-Path $InstallDir "mangaprep.exe") -Force
     foreach ($Notice in @("LICENSE-MIT", "LICENSE-APACHE", "THIRD-PARTY-NOTICES.md", "DEPENDENCY-LICENSES.txt")) {
         $Source = Join-Path $StageDir $Notice
         $Destination = Join-Path $InstallDir $Notice
@@ -75,7 +75,7 @@ try {
         }
     }
 
-    if ($env:MANGAPRESS_NO_PATH_UPDATE -ne "1") {
+    if ($env:MANGAPREP_NO_PATH_UPDATE -ne "1") {
         $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
         $PathEntries = @()
         if ($UserPath) { $PathEntries = $UserPath -split ";" }
@@ -85,7 +85,7 @@ try {
             Write-Host "Added $InstallDir to your user PATH. Restart your terminal for it to take effect."
         }
     }
-    Write-Host "Installed mangapress to $InstallDir\mangapress.exe"
+    Write-Host "Installed mangaprep to $InstallDir\mangaprep.exe"
     Write-Host $ActualVersion
 } finally {
     # Only remove the unique directory created above, never an installation folder.

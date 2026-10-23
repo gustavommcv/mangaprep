@@ -673,14 +673,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mangapress-cli"
+name = "mangaprep-cli"
 version = "0.8.3"
 dependencies = [
  "anyhow",
  "clap",
  "image",
  "lopdf",
- "mangapress-core",
+ "mangaprep-core",
  "rayon",
  "roxmltree",
  "serde_json",
@@ -689,7 +689,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mangapress-core"
+name = "mangaprep-core"
 version = "0.8.3"
 dependencies = [
  "image",

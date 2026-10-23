@@ -1,4 +1,4 @@
-# Contributing to mangapress
+# Contributing to mangaprep
 
 Bug reports, documentation fixes, device testing, and code contributions are welcome. For bugs,
 include the version, command, device profile, expected result, and actual output. A small
@@ -26,7 +26,7 @@ cargo test --workspace --locked
 Use `cargo fmt --all` to apply formatting. To run the CLI from the checkout:
 
 ```sh
-cargo run -p mangapress-cli -- --help
+cargo run -p mangaprep-cli -- --help
 ```
 
 CI checks formatting, linting, and tests on Windows, macOS, and Linux. Release targets and
@@ -39,8 +39,8 @@ which run the actual scripts with native hashing and extraction on their support
 
 ## Where to make a change
 
-- `crates/mangapress-core/`: image processing, profiles, metadata, and book formats.
-- `crates/mangapress-cli/`: options, input/output handling, and terminal or JSON output.
+- `crates/mangaprep-core/`: image processing, profiles, metadata, and book formats.
+- `crates/mangaprep-cli/`: options, input/output handling, and terminal or JSON output.
 - `tools/parity/`: comparisons against the named KCC reference release.
 
 Keep the core usable independently of the CLI. See the [architecture decisions](docs/adr/README.md)
