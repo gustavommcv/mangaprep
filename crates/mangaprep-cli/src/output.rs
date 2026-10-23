@@ -377,7 +377,8 @@ mod tests {
     #[test]
     fn a_kobo_book_made_from_a_folder_has_a_name_its_driver_can_read() {
         let root = tempfile::tempdir().unwrap();
-        let input = root.path().join("Who? Me!");
+        // Both characters are valid folder names on Windows, but unsafe for Kobo.
+        let input = root.path().join("Who; Me!");
         fs::create_dir(&input).unwrap();
 
         let result = plan(&input, None, "kepub.epub", true).unwrap();
