@@ -300,10 +300,80 @@ fn a_16_bit_png_cut_short_keeps_its_samples_in_the_machines_order() {
     );
     let page = decode_page(cut(&bytes, 6)).unwrap();
     assert!(page.truncated);
-    let page = page.image.to_rgb16();
-    assert_eq!(page.get_pixel(5, 0), source.get_pixel(5, 0));
-    assert_eq!(page.get_pixel(59, 3), source.get_pixel(59, 3));
+    // The page comes in eight bits, the high byte of each sample; a byte order that was wrong
+    // would put the low byte there.
+    let page = page.image.to_rgb8();
+    let high = |pixel: &image::Rgb<u16>| pixel.0.map(|sample| (sample >> 8) as u8);
+    assert_eq!(page.get_pixel(5, 0).0, high(source.get_pixel(5, 0)));
+    assert_eq!(page.get_pixel(59, 3).0, high(source.get_pixel(59, 3)));
     assert_eq!(page.get_pixel(0, 119).0, [0, 0, 0]);
+}
+
+/// Samples whose high byte is not what the `image` crate's scaling (`v / 257`, rounded) gives:
+/// 255 (0 and 1), 32767 (127 and 128), and the edges and the steps between bytes.
+const SIXTEEN_BIT_SAMPLES: [u16; 8] = [0, 255, 256, 257, 32767, 32768, 65534, 65535];
+
+fn high_bytes_of(samples: &[u16]) -> Vec<u8> {
+    samples.iter().map(|&sample| (sample >> 8) as u8).collect()
+}
+
+#[test]
+fn a_16_bit_gray_page_is_read_as_its_high_bytes_as_kcc_12_1_1_reads_it() {
+    let source = image::ImageBuffer::<image::Luma<u16>, Vec<u16>>::from_raw(
+        4,
+        2,
+        SIXTEEN_BIT_SAMPLES.to_vec(),
+    )
+    .unwrap();
+    let bytes = encoded(&DynamicImage::ImageLuma16(source), image::ImageFormat::Png);
+
+    let page = decode_page(&bytes).unwrap();
+
+    assert!(!page.truncated);
+    assert_eq!(page.image.color(), image::ColorType::L8);
+    assert_eq!(
+        page.image.as_bytes(),
+        &high_bytes_of(&SIXTEEN_BIT_SAMPLES)[..]
+    );
+    assert_eq!(
+        page.image.as_bytes(),
+        [0, 0, 1, 1, 127, 128, 255, 255],
+        "255 is 0 and 32767 is 127: the byte, not the scaled value"
+    );
+}
+
+#[test]
+fn a_16_bit_color_or_alpha_page_is_read_as_its_high_bytes_too() {
+    let samples = |count: usize| -> Vec<u16> {
+        (0..count)
+            .map(|index| SIXTEEN_BIT_SAMPLES[index % 8])
+            .collect()
+    };
+    let cases = [
+        (
+            DynamicImage::ImageLumaA16(image::ImageBuffer::from_raw(2, 2, samples(8)).unwrap()),
+            image::ColorType::La8,
+            samples(8),
+        ),
+        (
+            DynamicImage::ImageRgb16(image::ImageBuffer::from_raw(2, 2, samples(12)).unwrap()),
+            image::ColorType::Rgb8,
+            samples(12),
+        ),
+        (
+            DynamicImage::ImageRgba16(image::ImageBuffer::from_raw(2, 2, samples(16)).unwrap()),
+            image::ColorType::Rgba8,
+            samples(16),
+        ),
+    ];
+    for (source, color, expected) in cases {
+        let bytes = encoded(&source, image::ImageFormat::Png);
+
+        let page = decode_page(&bytes).unwrap();
+
+        assert_eq!(page.image.color(), color);
+        assert_eq!(page.image.as_bytes(), &high_bytes_of(&expected)[..]);
+    }
 }
 
 /// An interlaced (Adam7) 8-bit gray PNG written by hand, its data in stored deflate blocks:

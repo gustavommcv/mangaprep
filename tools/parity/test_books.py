@@ -237,7 +237,7 @@ xmlns:epub="http://www.idpf.org/2007/ops"><body><nav epub:type="toc"><ol>
                     self.assertEqual(os.environ["MANGAPRESS_PARITY_KCC"], str(checkout.resolve()))
                     cli = unittest.mock.Mock()
                     cli.main.return_value = 0
-                    return "12.0.0", cli, None, None
+                    return "12.1.1", cli, None, None
                 load.side_effect = verify_isolation
                 with self.assertRaises(SystemExit) as result:
                     kcc_oracle.run_book(str(checkout), self.directory, temporary, ["input"])

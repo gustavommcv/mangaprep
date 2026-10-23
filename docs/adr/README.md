@@ -29,3 +29,4 @@
 27. [A PDF keeps each page as it was made](0027-a-pdf-keeps-each-page-as-it-was-made.md) — applies a row of 13, replaces a part of 26; removes the `printpdf` dependency
 28. [Decode JPEG pages with libjpeg-turbo, as KCC's Pillow does](0028-decode-jpeg-pages-as-kccs-pillow-does.md) — applies 13; adds the `mozjpeg` dependency
 29. [A palette page is cropped between panels by its colours, not by its palette indices](0029-a-palette-page-is-cropped-between-panels-by-its-colours.md) — adds a difference kept on purpose to 19
+30. [Follow KCC 12.1.1](0030-follow-kcc-12-1-1.md) — changes the reference of 13; Kobo names, 16-bit pages, gray before gamma, fixed resolutions

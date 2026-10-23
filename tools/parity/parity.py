@@ -36,7 +36,7 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 
 # The KCC release mangapress follows. Another version still runs, with a
 # warning: differences may then be KCC's own between releases.
-REFERENCE_KCC = "12.0.0"
+REFERENCE_KCC = "12.1.1"
 
 # Mean absolute difference allowed between the two tools' pixels, in levels
 # out of 255. Both sides are taken before the JPEG step (see README.md), so

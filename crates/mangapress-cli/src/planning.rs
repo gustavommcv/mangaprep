@@ -68,11 +68,11 @@ pub(super) fn prepare<W: std::io::Write + Send>(
     // A Kobo profile's EPUB is a "kepub" by name, as upstream names it —
     // unless asked not to, or the resolution is custom (upstream no longer
     // sees a Kobo profile then).
-    let kepub = cli.format == Format::Epub
+    let kobo_epub = cli.format == Format::Epub
         && profile.family() == Family::Kobo
-        && !cli.nokepub
         && cli.customwidth.unwrap_or(0) == 0
         && cli.customheight.unwrap_or(0) == 0;
+    let kepub = kobo_epub && !cli.nokepub;
     // What the events call the format is the format itself. The file's
     // extension is a different thing for a kepub, and reporting it as the
     // format ("kepub.epub") is not a value the protocol has.
@@ -87,7 +87,9 @@ pub(super) fn prepare<W: std::io::Write + Send>(
     )
     .with_manga(title.to_owned())
     .with_path(absolute_display(cli.output.as_deref().unwrap_or(input)));
-    let output_plan = output::plan(input, cli.output.as_deref(), extension, kepub)
+    // The EPUB of a Kobo profile gets a name the Kobo's driver can read, a kepub or not (KCC 12.1.1
+    // asks for the Kobo profile and the EPUB format, and `--nokepub` changes neither).
+    let output_plan = output::plan(input, cli.output.as_deref(), extension, kobo_epub)
         .context("planning the output destination")?;
     let output_path = output_plan.path;
     if output_plan.collision {

@@ -140,18 +140,49 @@ fn decode_jpeg_as_kcc(bytes: &[u8]) -> Option<DynamicImage> {
 pub(crate) fn decode_page(bytes: &[u8]) -> Result<DecodedPage> {
     match decode_whole(bytes) {
         Ok(image) => Ok(DecodedPage {
-            image,
+            image: eight_bits(image),
             truncated: false,
         }),
         Err(Error::Image(error)) if data_ended_early(&error) => match decode_partly(bytes) {
             Some(image) => Ok(DecodedPage {
-                image,
+                image: eight_bits(image),
                 truncated: true,
             }),
             None => Err(Error::Image(error)),
         },
         Err(error) => Err(error),
     }
+}
+
+/// A page of more than eight bits a sample, in eight: the high byte of each sample, as KCC 12.1.1
+/// makes it (`uint8(array / 256)` for the 16-bit gray that Pillow keeps as `I;16`, and the byte
+/// Pillow itself keeps of a 16-bit color or gray-and-alpha PNG). The `image` crate scales and
+/// rounds (`v / 257`), which is a gray level away from that for most values. KCC 12.0.0 did not
+/// read the gray at all: Pillow's conversion clips what it cannot fit, and the page came out white.
+fn eight_bits(image: DynamicImage) -> DynamicImage {
+    fn high_bytes(samples: &[u16]) -> Vec<u8> {
+        samples.iter().map(|&sample| (sample >> 8) as u8).collect()
+    }
+    let converted = match &image {
+        DynamicImage::ImageLuma16(page) => {
+            image::GrayImage::from_raw(page.width(), page.height(), high_bytes(page))
+                .map(DynamicImage::ImageLuma8)
+        }
+        DynamicImage::ImageLumaA16(page) => {
+            image::GrayAlphaImage::from_raw(page.width(), page.height(), high_bytes(page))
+                .map(DynamicImage::ImageLumaA8)
+        }
+        DynamicImage::ImageRgb16(page) => {
+            image::RgbImage::from_raw(page.width(), page.height(), high_bytes(page))
+                .map(DynamicImage::ImageRgb8)
+        }
+        DynamicImage::ImageRgba16(page) => {
+            image::RgbaImage::from_raw(page.width(), page.height(), high_bytes(page))
+                .map(DynamicImage::ImageRgba8)
+        }
+        _ => None,
+    };
+    converted.unwrap_or(image)
 }
 
 /// Decode a page, whole or as far as it goes (see [`decode_page`]).

@@ -20,7 +20,11 @@ pub struct Plan {
 
 /// Resolve the destination and check what can be checked without creating
 /// anything. Actual writability is checked by staging before page work starts.
-pub fn plan(input: &Path, output: Option<&Path>, extension: &str, kepub: bool) -> io::Result<Plan> {
+///
+/// `kobo` is whether the book is the EPUB of a Kobo profile, kepub or not: a name taken from the
+/// input is then made one the Kobo's driver can read (`kobo_safe_stem`), as KCC 12.1.1 does for a
+/// file or a folder, with an output folder or without. A name that was asked for is kept as asked.
+pub fn plan(input: &Path, output: Option<&Path>, extension: &str, kobo: bool) -> io::Result<Plan> {
     // Resolve . and .. before taking a name, without changing the name of an
     // ordinary symlink argument. The input has already been validated/read.
     let source = if input.file_name().is_none() {
@@ -36,7 +40,7 @@ pub fn plan(input: &Path, output: Option<&Path>, extension: &str, kepub: bool) -
         }
         .ok_or_else(|| invalid("the input has no filename; choose an output file"))?
         .to_string_lossy();
-        let stem = if output.is_none() && kepub && input.is_file() {
+        let stem = if kobo {
             kobo_safe_stem(&source_name)
         } else {
             source_name.into_owned()
@@ -302,20 +306,20 @@ fn validate_parent(path: &Path) -> io::Result<()> {
     }
 }
 
-// Existing Kobo filename behavior; not used for explicitly named outputs.
+/// The characters a Kobo's own driver cannot take in the name of a book: KCC's
+/// `KOBO_TOUCH_DRIVER_REGEX` (`[/\\?%*:;|"'><$!]`, from a MobileRead report on the Kobo Touch
+/// driver). A KEPUB with a `!` in its name crashes the reader (KCC issue 919).
+const KOBO_UNSAFE: &[char] = &[
+    '/', '\\', '?', '%', '*', ':', ';', '|', '"', '\'', '>', '<', '$', '!',
+];
+
+/// A name for a book that a Kobo can open: each of those characters becomes `_`, one for one, and
+/// everything else stays, spaces and dots included. Up to 12.0.0 KCC replaced every run of
+/// characters that are not letters, digits or `_`, and only when there was no output folder.
 fn kobo_safe_stem(stem: &str) -> String {
-    let mut out = String::with_capacity(stem.len());
-    let mut in_run = false;
-    for c in stem.chars() {
-        if c.is_alphanumeric() || c == '_' {
-            out.push(c);
-            in_run = false;
-        } else if !in_run {
-            out.push('_');
-            in_run = true;
-        }
-    }
-    out
+    stem.chars()
+        .map(|c| if KOBO_UNSAFE.contains(&c) { '_' } else { c })
+        .collect()
 }
 
 #[cfg(test)]
@@ -339,10 +343,68 @@ mod tests {
     }
 
     #[test]
-    fn kobo_names_keep_the_existing_word_character_rule() {
-        assert_eq!(kobo_safe_stem("My Book (v1)"), "My_Book_v1_");
+    fn kobo_names_replace_the_characters_of_the_drivers_list_one_for_one() {
+        // KCC 12.1.1: spaces, dots, hyphens and parentheses stay.
+        assert_eq!(kobo_safe_stem("My Book (v1)"), "My Book (v1)");
         assert_eq!(kobo_safe_stem("already_safe_01"), "already_safe_01");
-        assert_eq!(kobo_safe_stem("君の名は - 1"), "君の名は_1");
+        assert_eq!(kobo_safe_stem("君の名は - 1"), "君の名は - 1");
+        assert_eq!(
+            kobo_safe_stem("Vol.01 Ch.001 - Title"),
+            "Vol.01 Ch.001 - Title"
+        );
+        // Every character of the list, once each, and a run is not collapsed.
+        assert_eq!(
+            kobo_safe_stem(r#"a/b\c?d%e*f:g;h|i"j'k>l<m$n!o"#),
+            "a_b_c_d_e_f_g_h_i_j_k_l_m_n_o"
+        );
+        assert_eq!(kobo_safe_stem("Wow!! 100%"), "Wow__ 100_");
+    }
+
+    #[test]
+    fn a_kobo_book_made_into_an_output_folder_has_a_name_its_driver_can_read() {
+        let root = tempfile::tempdir().unwrap();
+        let input = source(root.path(), "Dr. Stone! Vol.01 100%.cbz");
+        let out = root.path().join("out");
+        fs::create_dir(&out).unwrap();
+
+        let kobo = plan(&input, Some(&out), "kepub.epub", true).unwrap();
+        let other = plan(&input, Some(&out), "epub", false).unwrap();
+
+        assert_eq!(kobo.path, out.join("Dr. Stone_ Vol.01 100_.kepub.epub"));
+        assert_eq!(other.path, out.join("Dr. Stone! Vol.01 100%.epub"));
+    }
+
+    #[test]
+    fn a_kobo_book_made_from_a_folder_has_a_name_its_driver_can_read() {
+        let root = tempfile::tempdir().unwrap();
+        // Both characters are valid folder names on Windows, but unsafe for Kobo.
+        let input = root.path().join("Who; Me!");
+        fs::create_dir(&input).unwrap();
+
+        let result = plan(&input, None, "kepub.epub", true).unwrap();
+
+        assert_eq!(result.path, root.path().join("Who_ Me_.kepub.epub"));
+    }
+
+    #[test]
+    fn a_kobo_epub_that_is_not_a_kepub_has_the_same_safe_name() {
+        let root = tempfile::tempdir().unwrap();
+        let input = source(root.path(), "Wow!.cbz");
+
+        let result = plan(&input, None, "epub", true).unwrap();
+
+        assert_eq!(result.path, root.path().join("Wow_.epub"));
+    }
+
+    #[test]
+    fn a_name_that_was_asked_for_is_kept_as_asked_for_a_kobo_too() {
+        let root = tempfile::tempdir().unwrap();
+        let input = source(root.path(), "book.cbz");
+        let asked = root.path().join("Wow! 100%.kepub.epub");
+
+        let result = plan(&input, Some(&asked), "kepub.epub", true).unwrap();
+
+        assert_eq!(result.path, asked);
     }
 
     #[test]

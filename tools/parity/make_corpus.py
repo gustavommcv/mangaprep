@@ -93,6 +93,13 @@ def strip(seed, width, height, spans, background):
     return image
 
 
+def sixteen_bit(gray):
+    """The page as 16-bit gray (Pillow's `I;16`): each sample is the level in the high byte and a
+    low byte that varies, so that taking the high byte and scaling `v / 257` give different pages."""
+    levels = np.asarray(gray, dtype=np.uint16)
+    return Image.fromarray(levels * 256 + (levels * 7) % 256)
+
+
 def write(directory):
     """Writes the corpus under `directory` and returns the lists of files the scenarios use."""
     pages_dir = os.path.join(directory, "pages")
@@ -112,6 +119,11 @@ def write(directory):
         save("dark_no_number.png", ImageOps.invert(page(124, number=None))),
         save("grayscale_mode.png", page(125).convert("L")),
         save("jpeg_source.jpg", page(126), quality=90),
+        # A scan saved as RGB whose color is only noise: KCC does not count it as color, and since
+        # 12.1.1 makes it gray before the gamma, not after.
+        save("gray_saved_as_rgb.png", Image.merge("RGB", [band.point(lambda v, k=k: int(v * k)) for band, k in zip(page(143).split(), (1.0, 0.98, 0.94))])),
+        # 16-bit gray, whose low byte is not the high byte's echo: KCC 12.1.1 keeps the high byte.
+        save("gray_16_bit.png", sixteen_bit(page(144).convert("L"))),
         save("small.png", page(127).resize((450, 675), Image.LANCZOS)),
         save("large.png", page(128).resize((1800, 2700), Image.BICUBIC)),
     ]
