@@ -14,9 +14,12 @@ The comparison with KCC in CI runs on drawn pages. When a release changes proces
 book output, also run the [real-manga comparison](../tools/parity/README.md#real-manga) on local
 volumes before tagging; it cannot run in CI, since the volumes cannot be published.
 
-Only the publication job has repository write permission. It downloads the `mangapress-*`
+Only the publication job has repository write permission. It downloads the `mangaprep-*`
 package artifacts, not the separate CI license reports, generates checksums, and requires
-the release tag to exist. Archive names and installer entry points are unchanged.
+the release tag to exist. From 0.9.0, the executable, archives and installer variables use
+`mangaprep`; the repository's address changes too ([ADR 0031](adr/0031-rename-to-mangaprep.md)).
+Earlier releases keep their original names. Release notes and reader-test records below
+retain the names used by the versions they describe.
 
 ## 0.8.3
 
