@@ -21,6 +21,51 @@ the release tag to exist. From 0.9.0, the executable, archives and installer var
 Earlier releases keep their original names. Release notes and reader-test records below
 retain the names used by the versions they describe.
 
+## 0.9.0
+
+This is the first release named **mangaprep**, formerly mangapress. It follows KCC 12.1.1,
+fixes derived Kobo EPUB filenames and adds seven fixed-resolution profiles. The executable,
+release archives and installer variables have the new name; existing book identifiers stay
+the same. EPUB, CBZ and PDF remain the supported output formats.
+
+### Updating from mangapress
+
+- Run `mangaprep` (`mangaprep.exe` on Windows) and update scripts that invoke `mangapress`.
+  No executable alias with the old name is installed.
+- Release archives are `mangaprep-<target>.tar.gz` or `.zip`. Installer overrides are
+  `MANGAPREP_INSTALL_DIR`, `MANGAPREP_VERSION` and, on Windows, `MANGAPREP_NO_PATH_UPDATE`.
+  The old variables are no longer read. The Unix license directory is `mangaprep-licenses`.
+- The repository is [gustavommcv/mangaprep](https://github.com/gustavommcv/mangaprep).
+  Earlier releases keep their original archive and executable names.
+- Machine protocol version **1** is retained, but `tool` is now `"mangaprep"`.
+  Consumers that validate the tool name must update it together with the executable and
+  release pin ([ADR 0031](adr/0031-rename-to-mangaprep.md)).
+
+### Conversion changes
+
+- **Derived filenames for Kobo EPUBs are safe for the reader.** Each of
+  `/ \ ? % * : ; | " ' > < $ !` becomes `_`, without collapsing consecutive characters.
+  Spaces, dots and hyphens stay. This applies to file and folder inputs, with or without
+  an output folder, including `--nokepub`. An explicitly requested filename is kept as given;
+  callers choosing one must apply the Kobo rules themselves. Custom resolutions retain
+  the existing behavior of not treating the profile as a Kobo.
+- **16-bit pages keep the high byte of each sample**, matching KCC 12.1.1 for grayscale and
+  Pillow for color and alpha input. Previous releases scaled and rounded the samples.
+- **Pages classified as grayscale become gray before gamma correction.** Color pages
+  retain gamma correction per channel, including when their final output is grayscale.
+- **Seven fixed-resolution profiles** follow `OTHER`: `2400x3200`, `1860x2480`, `1650x2200`,
+  `1536x2048`, `1404x1872`, `1264x1680` and `1072x1448`. They have no device-family behavior.
+  The existing Kindle 11, Paperwhite 6 and Kobo Clara labels also name the 2026 Kindles
+  and Clara BW ([ADR 0030](adr/0030-follow-kcc-12-1-1.md)).
+- Output collisions use the suffix ` (mangaprep)`, and EPUB contributor metadata names
+  `mangaprep-0.9.0`. The namespace used to derive book identifiers remains unchanged.
+- The locked `ctutils` dependency is updated to 0.4.4 for RUSTSEC-2026-0385.
+
+The reference is KCC **12.1.1**. The tag workflow runs the extended comparisons and
+complete-book EPUB conformance checks before publishing the four target packages and checksums.
+Manga2Ink's bundled converter is updated separately; publishing this CLI release does not
+change the desktop app's pinned binary, tool name or protocol expectations.
+
 ## 0.8.3
 
 This release makes the PDF and the reading of JPEG pages match KCC 12.0.0, after the first

@@ -56,11 +56,11 @@ manually rather than bypassing verification.
 To select a published version, set `MANGAPREP_VERSION` (with or without its `v` prefix):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.sh | MANGAPREP_VERSION=v0.8.3 sh
+curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.sh | MANGAPREP_VERSION=v0.9.0 sh
 ```
 
 ```powershell
-$env:MANGAPREP_VERSION = 'v0.8.3'
+$env:MANGAPREP_VERSION = 'v0.9.0'
 irm https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.ps1 | iex
 ```
 
