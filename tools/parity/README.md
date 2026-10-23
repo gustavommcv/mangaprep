@@ -1,6 +1,6 @@
 # Comparing mangapress with KCC
 
-These tools run mangapress and [KCC](https://github.com/ciromattia/kcc) **12.0.0** on the same
+These tools run mangapress and [KCC](https://github.com/ciromattia/kcc) **12.1.1** on the same
 synthetic images and compare processed pages and books produced by the real CLIs. Use them for
 image-processing, metadata, and book-output changes. They run separately from `cargo test`.
 The [coverage map](coverage.md) distinguishes direct comparisons, Rust tests, and remaining gaps.
@@ -14,7 +14,7 @@ Use a virtual environment if you do not want to change your Python installation:
 
 ```sh
 python -m pip install -r tools/parity/requirements.txt
-git clone --depth 1 --branch v12.0.0 https://github.com/ciromattia/kcc ../kcc-reference
+git clone --depth 1 --branch v12.1.1 https://github.com/ciromattia/kcc ../kcc-reference
 python tools/parity/parity.py --kcc ../kcc-reference
 python tools/parity/books.py --kcc ../kcc-reference
 ```
@@ -172,7 +172,7 @@ or treating a successful Linux run as Windows ordering parity.
 
 [KCC parity](../../.github/workflows/parity.yml) runs on pull requests and pushes to `main`
 that change the crates, Cargo manifests/lockfile, comparison tools, or that workflow. It uses
-KCC 12.0.0 at commit `f127adbca992456e173d88ada18643eae66802fb` and the dependency versions in
+KCC 12.1.1 at commit `745ea3b544168d406c60ae122d50973ecb386e36` and the dependency versions in
 `requirements.txt`: the full Kindle 11 matrix, including the DX and Scribe custom-resolution regressions,
 then smoke checks for `K1`, `K2`, `KDX`, `KS3`, `KCS`, `KoLC`, and `RmkPPMove`. This spans all
 three grayscale palettes, old Kindle defaults, large screens, color devices, and each family.

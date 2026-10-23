@@ -45,7 +45,25 @@ fn profiles_are_machine_readable_in_declared_order() {
         .filter(|event| event["type"] == "profile")
         .collect();
     assert_eq!(profiles.first().unwrap()["code"], "K1");
-    assert_eq!(profiles.last().unwrap()["code"], "OTHER");
+    // OTHER, then the fixed resolutions KCC 12.1.1 lists after it, the smallest last.
+    assert_eq!(profiles.last().unwrap()["code"], "1072x1448");
+    let codes: Vec<&str> = profiles
+        .iter()
+        .map(|profile| profile["code"].as_str().unwrap())
+        .collect();
+    let other = codes.iter().position(|code| *code == "OTHER").unwrap();
+    assert_eq!(
+        &codes[other + 1..],
+        [
+            "2400x3200",
+            "1860x2480",
+            "1650x2200",
+            "1536x2048",
+            "1404x1872",
+            "1264x1680",
+            "1072x1448"
+        ]
+    );
     assert_eq!(events.last().unwrap()["profile_count"], profiles.len());
 }
 

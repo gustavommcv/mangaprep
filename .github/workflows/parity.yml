@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ciromattia/kcc
-          ref: f127adbca992456e173d88ada18643eae66802fb # v12.0.0
+          ref: 745ea3b544168d406c60ae122d50973ecb386e36 # v12.1.1
           path: target/kcc-reference
           persist-credentials: false
       - name: Compare the full Kindle 11 matrix

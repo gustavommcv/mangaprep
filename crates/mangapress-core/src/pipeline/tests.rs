@@ -685,3 +685,48 @@ fn webtoon_pages_are_never_margin_cropped_split_or_autocontrasted() {
     let out = process_page(&with_margins, &options, false).unwrap();
     assert_eq!(decode(&out[0]).dimensions(), (400, 600));
 }
+
+/// What `gammaCorrectImage()` makes of one sample, written out here rather than taken from the
+/// code under test.
+fn gamma_of(sample: u8, gamma: f64) -> u8 {
+    (255.0 * (f64::from(sample) / 255.0).powf(gamma)) as u8
+}
+
+#[test]
+fn a_page_that_is_not_color_is_made_gray_before_the_gamma_as_kcc_12_1_1_does() {
+    // Green enough that the two orders differ by a good many levels, and given to the function
+    // as "not color", as a scan saved as RGB is when its color is only noise.
+    let page = image::RgbImage::from_pixel(2, 2, image::Rgb([60, 200, 60]));
+    let gray = crate::color::to_gray(&page).get_pixel(0, 0)[0];
+    let gamma_after_gray = gamma_of(gray, 1.8);
+    let gray_after_gamma = crate::color::to_gray(&image::RgbImage::from_pixel(
+        2,
+        2,
+        image::Rgb([gamma_of(60, 1.8), gamma_of(200, 1.8), gamma_of(60, 1.8)]),
+    ))
+    .get_pixel(0, 0)[0];
+    assert_ne!(
+        gamma_after_gray, gray_after_gamma,
+        "the two orders must differ on this pixel for the test to say anything"
+    );
+
+    let not_color = super::finishing::gray_page(&page, false, 1.8);
+    let color = super::finishing::gray_page(&page, true, 1.8);
+
+    assert_eq!(not_color.get_pixel(0, 0)[0], gamma_after_gray);
+    assert_eq!(
+        color.get_pixel(0, 0)[0],
+        gray_after_gamma,
+        "a page in color that ends up gray keeps the gamma on each channel first"
+    );
+}
+
+#[test]
+fn without_a_gamma_the_two_orders_agree() {
+    let page = image::RgbImage::from_pixel(2, 2, image::Rgb([60, 200, 60]));
+
+    assert_eq!(
+        super::finishing::gray_page(&page, false, 1.0),
+        super::finishing::gray_page(&page, true, 1.0)
+    );
+}

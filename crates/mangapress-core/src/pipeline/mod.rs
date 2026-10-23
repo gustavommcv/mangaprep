@@ -250,11 +250,12 @@ pub struct ProcessedPage {
     pub source_truncated: bool,
 }
 
-/// Processes a single source page, in upstream KCC 12.0.0's order:
-/// decode -> detect background and color -> crop margins (and page number)
-/// -> inter-panel crop -> spread decide/execute -> (per resulting page)
-/// gamma -> grayscale -> autocontrast -> resize -> rainbow-artifact removal
-/// (if `--eraserainbow`) -> quantize (if `--forcepng`) -> encode.
+/// Processes a single source page, in upstream KCC 12.1.1's order:
+/// decode (16 bits a sample become eight, by the high byte) -> detect background and color
+/// -> crop margins (and page number) -> inter-panel crop -> spread decide/execute
+/// -> (per resulting page) grayscale then gamma for a page that is not color, gamma on each
+/// channel then grayscale for a color page that ends up gray -> autocontrast -> resize
+/// -> rainbow-artifact removal (if `--eraserainbow`) -> quantize (if `--forcepng`) -> encode.
 ///
 /// Three things here follow upstream changes made after the commit this
 /// crate was first written against, each confirmed by running real KCC
@@ -271,9 +272,10 @@ pub struct ProcessedPage {
 ///   autocontrasted, though it still ends up grayscale.
 ///
 /// The geometric stages run on the page's RGB pixels, steered by a
-/// grayscale proxy; only gamma onward works in grayscale. That is upstream's
-/// own split, and it is what lets gamma be applied per channel before the
-/// conversion to gray, as upstream applies it.
+/// grayscale proxy. The finishing stages work in grayscale, or, for a color
+/// page kept in color, in RGB. That is upstream's own split: a page that is not
+/// color is gray from the start of them (KCC 12.1.1), and a color page that
+/// ends up gray has its gamma applied per channel before the conversion.
 ///
 /// Every stage here has its own fixture-backed tests in [`spread`],
 /// [`crate::crop`], [`crate::color`], [`crate::contrast`],

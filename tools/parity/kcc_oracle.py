@@ -30,9 +30,39 @@ def unavailable_codec(*args, **kwargs):
     raise RuntimeError("the parity oracle does not exercise MozJPEG; install its real dependency to use it")
 
 
+def qt_core_stub():
+    """What KCC 12.1.1 needs of Qt when it runs without a window: its modules import
+    `QCoreApplication` and `QTranslator` for the texts of the window, and a run with no
+    application says the text as it is written, which is what KCC itself does."""
+
+    class QCoreApplication:
+        @staticmethod
+        def translate(context, text, *arguments, **keywords):
+            return text
+
+        @staticmethod
+        def instance():
+            return None
+
+    class QTranslator:
+        pass
+
+    package = types.ModuleType("PySide6")
+    core = types.ModuleType("PySide6.QtCore")
+    core.QCoreApplication = QCoreApplication
+    core.QTranslator = QTranslator
+    package.QtCore = core
+    return {"PySide6": package, "PySide6.QtCore": core}
+
+
 def load_kcc(checkout):
     # Sorting and filename sanitization use the real development dependencies,
-    # including in book comparisons. Only unused PDF/MozJPEG imports get stubs.
+    # including in book comparisons. Only unused PDF/MozJPEG imports get stubs, and the
+    # texts of KCC's window (PySide6) when KCC's modules import them.
+    try:
+        __import__("PySide6.QtCore")
+    except ImportError:
+        sys.modules.update(qt_core_stub())
     for name, attributes in {
         "pymupdf": {},
         "mozjpeg_lossless_optimization": {"optimize": unavailable_codec},

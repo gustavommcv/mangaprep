@@ -108,6 +108,10 @@ If you intentionally use external links, copy their files into the input instead
 Use `--output` for a file or directory. Without it, output is written beside the input; a Kobo
 profile's EPUB uses the `.kepub.epub` extension. Add `--nokepub` for a plain `.epub`.
 Derived filenames follow the source, not the book title; folders keep dots in their names.
+For a Kobo profile's EPUB, a derived name has each of `/ \ ? % * : ; | " ' > < $ !` replaced by `_`
+(and nothing else changed), with or without `--output`: a Kobo's own driver cannot read a book
+with one of them in its name, and a KEPUB with a `!` crashes its reader. A name you give is kept
+as given. Keep those characters out of the folders you copy the book to as well.
 Existing files are never replaced, even with an explicit output file: a suffix such as
 ` (mangapress)` is added instead, and the command reports the path used.
 Choose a format supported by your reading app: a Kindle profile sets screen dimensions but
@@ -131,7 +135,7 @@ processing, then stages and synchronizes the completed book before publishing it
 `mangapress --help` for the full list of options and defaults.
 
 The Kindle DX/DXG profile keeps its built-in 824 × 1000 size in `--list-profiles`. For CBZ
-output (including `auto`), it targets 824 × 1200, as KCC 12.0.0 does. Setting either custom
+output (including `auto`), it targets 824 × 1200, as KCC 12.1.1 does. Setting either custom
 dimension disables that special case; EPUB and PDF retain the built-in size.
 Unmodified Scribe profiles cap the EPUB target width at 1920, also following KCC;
 CBZ/PDF and custom dimensions retain their full resolution.
@@ -248,7 +252,7 @@ available. Pages generated from several images may not have a single original fi
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development, tests, and reporting bugs.
 
-KCC 12.0.0 is the image-processing reference. mangapress is an independent project; the
+KCC 12.1.1 is the image-processing reference. mangapress is an independent project; the
 [comparison tools](tools/parity/README.md) check selected scenarios against that release.
 [ADR 0013](docs/adr/0013-follow-a-named-kcc-release.md) records the intended compatibility and
 deliberate differences, and [ADR 0007](docs/adr/0007-gplv3-boundary-kcc-image-rs.md) explains the

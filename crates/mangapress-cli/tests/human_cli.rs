@@ -271,7 +271,9 @@ fn human_profile_listing_remains_a_plain_table_without_input() {
     assert!(output.stderr.is_empty());
     let table = String::from_utf8(output.stdout).unwrap();
     assert!(table.lines().next().unwrap().starts_with("K1 "));
-    assert!(table.lines().last().unwrap().starts_with("OTHER "));
+    // OTHER, then the fixed resolutions KCC 12.1.1 lists after it, the smallest last.
+    assert!(table.lines().last().unwrap().starts_with("1072x1448 "));
+    assert!(table.lines().any(|line| line.starts_with("OTHER ")));
     assert!(table
         .lines()
         .all(|line| line.split_whitespace().last().unwrap().contains('x')));

@@ -5,6 +5,19 @@ use crate::crop::Background;
 use crate::error::Result;
 use crate::quantize::Container;
 
+/// The page as gray, with gamma applied, in the order KCC 12.1.1 uses. A page that is not in color
+/// is made gray first and the gamma goes on the gray: where gamma is not 1 this differs from
+/// gamma on each channel followed by the conversion on a pixel that is only nearly neutral, as a
+/// scan saved as RGB is, because the curve is not linear. A page in color that ends up gray keeps
+/// the other order: the gamma goes on each channel, then the conversion.
+pub(super) fn gray_page(page: &image::RgbImage, is_color: bool, gamma: f32) -> image::GrayImage {
+    if is_color {
+        crate::color::to_gray(&crate::contrast::gamma_correct_rgb(page, gamma))
+    } else {
+        crate::contrast::gamma_correct(&crate::color::to_gray(page), gamma)
+    }
+}
+
 pub(super) fn finish_page(
     page: image::RgbImage,
     role: spread::PageRole,
@@ -17,11 +30,11 @@ pub(super) fn finish_page(
         .gamma
         .filter(|&g| g >= 0.1)
         .unwrap_or(options.profile.gamma);
-    let page = crate::contrast::gamma_correct_rgb(&page, effective_gamma);
     if is_color && options.force_color {
+        let page = crate::contrast::gamma_correct_rgb(&page, effective_gamma);
         return finish_color_page(page, role, target, options, background);
     }
-    let page = crate::color::to_gray(&page);
+    let page = gray_page(&page, is_color, effective_gamma);
 
     let page =
         if options.noautocontrast || options.webtoon || (is_color && !options.color_autocontrast) {

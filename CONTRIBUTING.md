@@ -76,7 +76,7 @@ It uses synthetic CLI output and a pinned EPUBCheck distribution, and requires J
 for this development check. Verify its remote run for the same commit; parity does not
 replace conformance, and conformance does not prove reader appearance.
 
-KCC 12.0.0 is the current reference. Preserve the implementation and licensing boundary in
+KCC 12.1.1 is the current reference. Preserve the implementation and licensing boundary in
 [ADR 0007](docs/adr/0007-gplv3-boundary-kcc-image-rs.md), and follow
 [ADR 0013](docs/adr/0013-follow-a-named-kcc-release.md) when considering differences or a new
 reference release.

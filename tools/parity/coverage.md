@@ -1,4 +1,4 @@
-# KCC 12.0.0 coverage map
+# KCC 12.1.1 coverage map
 
 This inventory describes executable checks, not a claim of exhaustive parity. The oracle imports
 the separate, pinned KCC checkout; no upstream implementation is copied into mangapress.

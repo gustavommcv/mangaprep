@@ -75,7 +75,9 @@ pub enum Family {
 
 impl Profile {
     pub fn family(&self) -> Family {
-        if self.code == "OTHER" {
+        // A fixed resolution (`1072x1448`) is a screen of that size and nothing more, as `OTHER` is
+        // once it has a size: no Kindle or Kobo behavior, which is how KCC 12.1.1 treats it.
+        if self.code == "OTHER" || self.code.starts_with(|c: char| c.is_ascii_digit()) {
             Family::Other
         } else if self.code.starts_with("Rmk") {
             Family::Remarkable
@@ -180,7 +182,7 @@ pub static PROFILES: &[Profile] = &[
     ),
     profile!("K810", "Kindle 8/10", 600, 800, Palette::Gray16),
     profile!("KO", "Kindle Oasis 2/3", 1264, 1680, Palette::Gray16),
-    profile!("K11", "Kindle 11", 1072, 1448, Palette::Gray16),
+    profile!("K11", "Kindle 11/2026", 1072, 1448, Palette::Gray16),
     profile!(
         "KPW5",
         "Kindle Paperwhite 5/Signature Edition",
@@ -188,7 +190,13 @@ pub static PROFILES: &[Profile] = &[
         1648,
         Palette::Gray16
     ),
-    profile!("KPW6", "Kindle Paperwhite 6", 1272, 1696, Palette::Gray16),
+    profile!(
+        "KPW6",
+        "Kindle Paperwhite 6/2026",
+        1272,
+        1696,
+        Palette::Gray16
+    ),
     profile!("KS1860", "Kindle 1860", 1860, 1920, Palette::Gray16),
     profile!("KS1920", "Kindle 1920", 1920, 1920, Palette::Gray16),
     profile!("KS1240", "Kindle 1240", 1240, 1860, Palette::Gray16),
@@ -214,7 +222,7 @@ pub static PROFILES: &[Profile] = &[
     profile!("KoN", "Kobo Nia", 758, 1024, Palette::Gray16),
     profile!(
         "KoC",
-        "Kobo Clara HD/Kobo Clara 2E",
+        "Kobo Clara HD/Kobo Clara 2E/Kobo Clara BW",
         1072,
         1448,
         Palette::Gray16
@@ -244,6 +252,15 @@ pub static PROFILES: &[Profile] = &[
     ),
     // --- Generic fallback ---
     profile!("OTHER", "Other", 0, 0, Palette::Gray16),
+    // --- Fixed resolutions (KCC 12.1.1): a screen of that size and nothing else about it, for the
+    // devices that have no profile of their own (BOOX and other 300 ppi screens up to 13.3"). ---
+    profile!("2400x3200", "2400x3200", 2400, 3200, Palette::Gray16),
+    profile!("1860x2480", "1860x2480", 1860, 2480, Palette::Gray16),
+    profile!("1650x2200", "1650x2200", 1650, 2200, Palette::Gray16),
+    profile!("1536x2048", "1536x2048", 1536, 2048, Palette::Gray16),
+    profile!("1404x1872", "1404x1872", 1404, 1872, Palette::Gray16),
+    profile!("1264x1680", "1264x1680", 1264, 1680, Palette::Gray16),
+    profile!("1072x1448", "1072x1448", 1072, 1448, Palette::Gray16),
 ];
 
 #[cfg(test)]
@@ -300,6 +317,47 @@ mod tests {
         assert!(values.contains(&0xdd));
         assert!(!values.contains(&0xee));
         assert!(values.contains(&0xff));
+    }
+
+    #[test]
+    fn the_fixed_resolutions_are_screens_of_that_size_and_belong_to_no_family() {
+        let fixed = [
+            "2400x3200",
+            "1860x2480",
+            "1650x2200",
+            "1536x2048",
+            "1404x1872",
+            "1264x1680",
+            "1072x1448",
+        ];
+        for code in fixed {
+            let profile = Profile::by_code(code).unwrap_or_else(|| panic!("{code} must exist"));
+            assert_eq!(format!("{}x{}", profile.width, profile.height), code);
+            assert_eq!(profile.display_name, code);
+            assert_eq!(profile.family(), Family::Other, "{code}");
+            assert_eq!(profile.palette, Palette::Gray16, "{code}");
+        }
+        let listed: Vec<&str> = PROFILES
+            .iter()
+            .skip_while(|profile| profile.code != "OTHER")
+            .skip(1)
+            .map(|profile| profile.code)
+            .collect();
+        assert_eq!(
+            listed, fixed,
+            "after OTHER, largest first, as KCC lists them"
+        );
+    }
+
+    #[test]
+    fn the_names_of_three_profiles_are_those_of_kcc_12_1_1() {
+        for (code, name) in [
+            ("K11", "Kindle 11/2026"),
+            ("KPW6", "Kindle Paperwhite 6/2026"),
+            ("KoC", "Kobo Clara HD/Kobo Clara 2E/Kobo Clara BW"),
+        ] {
+            assert_eq!(Profile::by_code(code).unwrap().display_name, name);
+        }
     }
 
     #[test]
