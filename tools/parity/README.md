@@ -19,8 +19,9 @@ python tools/parity/parity.py --kcc ../kcc-reference
 python tools/parity/books.py --kcc ../kcc-reference
 ```
 
-Sorting and filename sanitization use real `natsort` and `python-slugify` dependencies. Only
-unused PDF and MozJPEG imports have substitutes; neither feature is exercised. The full GUI
+Sorting and filename sanitization use real `natsort` and `python-slugify` dependencies. Unused
+PDF and MozJPEG imports have substitutes; neither feature is exercised. Without PySide6, Qt's
+translation calls return the source text, as KCC does without an application. The full GUI
 dependency set is not required. For the CLI-to-book CBZ cases, install 7-Zip and make it available
 on `PATH`: KCC's archive extractor needs it. The page-only matrix does not need that extractor.
 A failing comparison exits nonzero.
