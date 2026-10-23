@@ -1,4 +1,4 @@
-"""The order of file names that `natsort` gives, as KCC 12.0.0 uses it, written down for mangapress's tests.
+"""The order of file names that `natsort` gives, as KCC 12.0.0 uses it, written down for mangaprep's tests.
 
 KCC puts the names of each folder in order with `natsort`'s operating-system ordering. On Linux, without
 the optional PyICU library, that is the key made below. This script asks the real library for the order of a
@@ -25,7 +25,7 @@ from natsort import natsort_keygen, ns
 from natsort.unicode_numbers import digits_no_decimals
 
 REPO = Path(__file__).resolve().parents[2]
-VECTORS = REPO / "crates/mangapress-core/tests/natural_sort_vectors.txt"
+VECTORS = REPO / "crates/mangaprep-core/tests/natural_sort_vectors.txt"
 
 HEADER = """\
 ## Orders of file names from natsort 8.4.0 as KCC 12.0.0 uses it, one group per block.

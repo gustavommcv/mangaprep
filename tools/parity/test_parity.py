@@ -60,7 +60,7 @@ class ComparisonTests(unittest.TestCase):
 
     def write_manifests(self, theirs, ours):
         (self.kcc / "kcc.json").write_text(json.dumps({"pages": theirs}), encoding="utf-8")
-        (self.ours / "mangapress.json").write_text(json.dumps({"pages": ours}), encoding="utf-8")
+        (self.ours / "mangaprep.json").write_text(json.dumps({"pages": ours}), encoding="utf-8")
 
     def compare(self, files, theirs, ours):
         self.write_manifests(theirs, ours)

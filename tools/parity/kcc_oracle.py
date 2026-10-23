@@ -90,7 +90,7 @@ def run_book(checkout, out_dir, temporary, arguments):
         os.environ[variable] = str(temporary)
     tempfile.tempdir = str(temporary)
     # Windows spawn workers import this driver before unpickling KCC tasks.
-    os.environ["MANGAPRESS_PARITY_KCC"] = os.path.abspath(checkout)
+    os.environ["MANGAPREP_PARITY_KCC"] = os.path.abspath(checkout)
     _, comic2ebook, _, _ = load_kcc(checkout)
     raise SystemExit(comic2ebook.main(arguments))
 
@@ -159,8 +159,8 @@ def run_webtoon(checkout, out_dir, directory, width, height):
     print(f"KCC {version}: {len(os.listdir(out_dir))} webtoon pages")
 
 
-if os.environ.get("MANGAPRESS_PARITY_KCC"):
-    load_kcc(os.environ["MANGAPRESS_PARITY_KCC"])
+if os.environ.get("MANGAPREP_PARITY_KCC"):
+    load_kcc(os.environ["MANGAPREP_PARITY_KCC"])
 
 
 if __name__ == "__main__":

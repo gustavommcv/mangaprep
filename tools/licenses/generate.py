@@ -11,7 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 CARGO_ABOUT_VERSION = "0.9.2"
-WORKSPACE_CRATES = {"mangapress-cli", "mangapress-core"}
+WORKSPACE_CRATES = {"mangaprep-cli", "mangaprep-core"}
 
 
 def validate_report(report, rendered):
@@ -61,7 +61,7 @@ def generate(target, cargo_about):
         "--locked",
         "--fail",
         "--manifest-path",
-        str(ROOT / "crates/mangapress-cli/Cargo.toml"),
+        str(ROOT / "crates/mangaprep-cli/Cargo.toml"),
         "--target",
         target,
     ]

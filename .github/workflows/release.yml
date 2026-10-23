@@ -85,7 +85,7 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.target }} -p mangapress-cli
+        run: cargo build --release --locked --target ${{ matrix.target }} -p mangaprep-cli
 
       - uses: ./.github/actions/dependency-notices
         id: notices
@@ -99,8 +99,8 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          tar -czf "mangapress-${{ matrix.target }}.tar.gz" \
-            -C "$GITHUB_WORKSPACE/target/${{ matrix.target }}/release" mangapress \
+          tar -czf "mangaprep-${{ matrix.target }}.tar.gz" \
+            -C "$GITHUB_WORKSPACE/target/${{ matrix.target }}/release" mangaprep \
             -C "$GITHUB_WORKSPACE" LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md \
             -C "$GITHUB_WORKSPACE/${{ steps.notices.outputs.directory }}" DEPENDENCY-LICENSES.txt
 
@@ -108,15 +108,15 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path target/${{ matrix.target }}/release/mangapress.exe, `
+          Compress-Archive -Path target/${{ matrix.target }}/release/mangaprep.exe, `
               LICENSE-MIT, LICENSE-APACHE, THIRD-PARTY-NOTICES.md, `
               ${{ steps.notices.outputs.directory }}/DEPENDENCY-LICENSES.txt `
-            -DestinationPath mangapress-${{ matrix.target }}.zip
+            -DestinationPath mangaprep-${{ matrix.target }}.zip
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: mangapress-${{ matrix.target }}
-          path: mangapress-${{ matrix.target }}.*
+          name: mangaprep-${{ matrix.target }}
+          path: mangaprep-${{ matrix.target }}.*
           if-no-files-found: error
 
   release:
@@ -129,11 +129,11 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-          pattern: mangapress-*
+          pattern: mangaprep-*
 
       - name: Checksums
         working-directory: dist
-        run: sha256sum -- mangapress-* > checksums.txt
+        run: sha256sum -- mangaprep-* > checksums.txt
 
       - name: Create release
         env:

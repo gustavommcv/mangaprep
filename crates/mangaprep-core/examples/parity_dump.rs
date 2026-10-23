@@ -1,0 +1,175 @@
+//! The mangaprep half of the parity check in `tools/parity/`: runs this
+//! crate's real page pipeline over a list of images and writes every page
+//! it produces, as the pipeline wrote it (or as lossless PNG with `--lossless`), plus a
+//! `mangaprep.json` describing them, so that
+//! `tools/parity/parity.py` can set them beside what upstream KCC does with
+//! the same images. Not part of the product; see `tools/parity/README.md`.
+//!
+//! ```text
+//! parity_dump <out_dir> <list_file> <profile> [flags]     pipeline, one page per line of the list
+//! parity_dump <out_dir> <list_file> <profile> --quantize-only   dither already-gray PNGs as they are
+//! parity_dump <out_dir> <directory> <profile> --webtoon-dir     merge a folder into a strip and cut it
+//! ```
+//!
+//! The first line of the list is the book's first page.
+
+use mangaprep_core::crop::inter_panel::InterPanelMode;
+use mangaprep_core::pipeline::{self, CroppingMode, OutputFormat, PipelineOptions, SplitterMode};
+use mangaprep_core::{fill_check::fill_check, Profile};
+use std::io::BufRead;
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 4 {
+        eprintln!("usage: parity_dump <out_dir> <list_file|directory> <profile> [flags]");
+        std::process::exit(2);
+    }
+    let (out_dir, list, profile) = (&args[1], &args[2], &args[3]);
+    let flag = |name: &str| args.iter().any(|a| a == name);
+    let value = |name: &str| {
+        args.iter()
+            .find_map(|a| a.strip_prefix(name).and_then(|rest| rest.strip_prefix('=')))
+    };
+
+    let number = |name: &str| value(name).map(|v| v.parse::<f32>().expect("a number"));
+
+    let webtoon = flag("--webtoon");
+    // The pages as lossless PNG whatever the scenario asks for, so that what is compared with KCC's
+    // pixels (which the oracle takes before its JPEG save) is the processing and not the codec.
+    // Only the last step changes: nothing before the encoder looks at these three settings.
+    let lossless = flag("--lossless");
+    let options = PipelineOptions {
+        profile: Profile::by_code(profile).expect("a known profile code"),
+        width_override: value("--customwidth").map(|v| v.parse().expect("--customwidth=<number>")),
+        height_override: value("--customheight")
+            .map(|v| v.parse().expect("--customheight=<number>")),
+        // Upstream's webtoon mode forces these four; see the CLI.
+        manga_style: flag("--manga") && !webtoon,
+        cropping: match value("--crop") {
+            Some("disabled") => CroppingMode::Disabled,
+            Some("margins") => CroppingMode::Margins,
+            _ => CroppingMode::MarginsAndPageNumbers,
+        },
+        cropping_power: number("--croppingpower").unwrap_or(1.0),
+        cropping_minimum: number("--croppingminimum").unwrap_or(0.0),
+        preserve_margin_percent: number("--preservemargin").unwrap_or(0.0),
+        inter_panel_crop: match value("--ipc") {
+            Some("horizontal") => InterPanelMode::Horizontal,
+            Some("both") => InterPanelMode::Both,
+            _ => InterPanelMode::Disabled,
+        },
+        splitter: match value("--splitter") {
+            Some("rotate") => SplitterMode::Rotate,
+            Some("both") => SplitterMode::Both,
+            _ => SplitterMode::Split,
+        },
+        upscale: flag("--upscale") && !webtoon,
+        stretch: flag("--stretch"),
+        wallpaper: flag("--wallpaper"),
+        white_borders: flag("--whiteborders") || webtoon,
+        black_borders: flag("--blackborders") && !webtoon,
+        rotate_right: flag("--rotateright"),
+        no_rotate: flag("--norotate"),
+        rotate_first: flag("--rotatefirst"),
+        maximize_strips: flag("--maximizestrips"),
+        color_autocontrast: flag("--colorautocontrast"),
+        webtoon,
+        force_color: flag("--forcecolor"),
+        force_png_rgb: flag("--force-png-rgb") || lossless,
+        png_legacy: flag("--pnglegacy"),
+        no_quantize: flag("--noquantize") || lossless,
+        no_processing: false,
+        output_format: match value("--format") {
+            Some("cbz") => OutputFormat::Cbz,
+            Some("pdf") => OutputFormat::Pdf,
+            _ => OutputFormat::Epub,
+        },
+        force_png: flag("--forcepng") || lossless,
+        gamma: value("--gamma").map(|g| g.parse().expect("--gamma=<number>")),
+        autolevel: flag("--autolevel"),
+        noautocontrast: flag("--noautocontrast"),
+        erase_rainbow: flag("--eraserainbow"),
+        jpeg_quality: Some(100),
+    };
+    std::fs::create_dir_all(out_dir).expect("creating the output directory");
+
+    if flag("--webtoon-dir") {
+        let mut files: Vec<_> = std::fs::read_dir(list)
+            .expect("reading the strip directory")
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        files.sort();
+        let images = files
+            .iter()
+            .map(|file| {
+                mangaprep_core::webtoon::decode_strip_image(&std::fs::read(file).unwrap()).unwrap()
+            })
+            .collect();
+        let strip = mangaprep_core::webtoon::merge_strip(images).unwrap();
+        strip.save(format!("{out_dir}/strip.png")).unwrap();
+        let pages =
+            mangaprep_core::webtoon::split_strip(&strip, options.target_resolution()).unwrap();
+        for (n, page) in pages.iter().enumerate() {
+            page.save(format!("{out_dir}/page-{:04}.png", n + 1))
+                .unwrap();
+        }
+        return;
+    }
+
+    let lines: Vec<String> = std::io::BufReader::new(std::fs::File::open(list).expect("the list"))
+        .lines()
+        .map(|line| line.unwrap().trim().to_string())
+        .filter(|line| !line.is_empty())
+        .collect();
+
+    if flag("--quantize-only") {
+        for (n, path) in lines.iter().enumerate() {
+            let gray = image::open(path).unwrap().to_luma8();
+            mangaprep_core::quantize::quantize_with_floyd_steinberg(&gray, options.profile.palette)
+                .save(format!("{out_dir}/{n:04}.png"))
+                .unwrap();
+        }
+        return;
+    }
+
+    let mut pages = Vec::new();
+    for (n, path) in lines.iter().enumerate() {
+        let bytes = std::fs::read(path).expect("a readable source image");
+        let background = fill_check(&mangaprep_core::color::to_gray(
+            &image::load_from_memory(&bytes).unwrap().to_rgb8(),
+        ));
+        let outputs = pipeline::process_page(&bytes, &options, n == 0).unwrap();
+        let mut pieces = Vec::new();
+        for (i, page) in outputs.iter().enumerate() {
+            // The page as the pipeline wrote it, so that the comparison decodes it with the
+            // same decoder as KCC's file (Pillow). Decoding it here with the `image` crate
+            // would put that crate's chroma upsampling in the comparison, and a JPEG with
+            // its chroma at half size, like KCC's, shows it as a difference of its own.
+            let decoded = image::load_from_memory(&page.bytes).unwrap();
+            let name = format!("{n:04}_{i}.{}", page.extension);
+            std::fs::write(format!("{out_dir}/{name}"), &page.bytes).unwrap();
+            pieces.push(format!(
+                r#"{{"file": "{name}", "size": [{}, {}], "role": "{:?}", "ext": "{}", "black_background": {}}}"#,
+                decoded.width(),
+                decoded.height(),
+                page.role,
+                page.extension,
+                page.black_background
+            ));
+        }
+        pages.push(format!(
+            r#"{{"background": "{}", "pieces": [{}]}}"#,
+            if background == mangaprep_core::crop::Background::White {
+                "white"
+            } else {
+                "black"
+            },
+            pieces.join(", ")
+        ));
+    }
+    std::fs::write(
+        format!("{out_dir}/mangaprep.json"),
+        format!("{{\"pages\": [\n{}\n]}}\n", pages.join(",\n")),
+    )
+    .unwrap();
+}

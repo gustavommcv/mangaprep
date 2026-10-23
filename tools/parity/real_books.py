@@ -1,10 +1,10 @@
-"""Makes the same books with KCC's CLI and mangapress's, in CBZ, EPUB and PDF, and compares them.
+"""Makes the same books with KCC's CLI and mangaprep's, in CBZ, EPUB and PDF, and compares them.
 
 Run on your own volumes before a release that changes processing, decoding or book output. They
 stay outside the repository.
 
     python tools/parity/real_books.py --kcc ../kcc-reference --book FILE_OR_FOLDER [--book ...]
-        [--profiles K11] [--formats cbz,epub,pdf] [--webtoon] [--mangapress PATH]
+        [--profiles K11] [--formats cbz,epub,pdf] [--webtoon] [--mangaprep PATH]
 
 A book is a `.cbz` or a folder of chapter folders, as Mangabind writes a volume. Both tools get
 the options KCC's window starts with on the device (see real_pages.py), the same title and the
@@ -127,14 +127,14 @@ READERS = {"cbz": read_cbz, "epub": read_epub, "pdf": read_pdf}
 def compare(theirs, mine, fmt, webtoon=False):
     problems, largest = [], 0.0
     if len(theirs["pages"]) != len(mine["pages"]):
-        return [f"pages: KCC {len(theirs['pages'])}, mangapress {len(mine['pages'])}"], largest
+        return [f"pages: KCC {len(theirs['pages'])}, mangaprep {len(mine['pages'])}"], largest
     for number, ((_, a), (_, b)) in enumerate(zip(theirs["pages"], mine["pages"]), 1):
         if a is None or b is None:
             problems.append(f"page {number} has no image")
             continue
         with Image.open(io.BytesIO(a)) as x, Image.open(io.BytesIO(b)) as y:
             if x.size != y.size:
-                problems.append(f"page {number}: KCC {x.size}, mangapress {y.size}")
+                problems.append(f"page {number}: KCC {x.size}, mangaprep {y.size}")
                 continue
             mode = "RGB" if "RGB" in (x.mode, y.mode) else "L"
             difference = np.abs(np.asarray(x.convert(mode), dtype=np.int16) - np.asarray(y.convert(mode), dtype=np.int16)).mean()
@@ -143,13 +143,13 @@ def compare(theirs, mine, fmt, webtoon=False):
             problems.append(f"page {number}: pixels differ by {difference:.2f} levels on average")
     for key in theirs["meta"]:
         if webtoon and key == "cover":
-            # KCC's webtoon EPUB declares no cover, and mangapress's does: TOC-4 of ADR 0019, kept on
+            # KCC's webtoon EPUB declares no cover, and mangaprep's does: TOC-4 of ADR 0019, kept on
             # purpose.
             continue
         if theirs["meta"][key] != mine["meta"].get(key):
-            problems.append(f"{key}: KCC {theirs['meta'][key]}, mangapress {mine['meta'].get(key)}")
+            problems.append(f"{key}: KCC {theirs['meta'][key]}, mangaprep {mine['meta'].get(key)}")
     if fmt == "epub" and theirs["contents"] != mine["contents"]:
-        problems.append(f"contents: KCC {theirs['contents'][:3]}, mangapress {mine['contents'][:3]}")
+        problems.append(f"contents: KCC {theirs['contents'][:3]}, mangaprep {mine['contents'][:3]}")
     return problems, largest
 
 
@@ -160,7 +160,7 @@ def main():
     parser.add_argument("--profiles", default="K11")
     parser.add_argument("--formats", default="cbz,epub,pdf")
     parser.add_argument("--webtoon", action="store_true", help="webtoon mode on both sides")
-    parser.add_argument("--mangapress", help="the mangapress executable (default: build the release one)")
+    parser.add_argument("--mangaprep", help="the mangaprep executable (default: build the release one)")
     parser.add_argument("--work", default=os.path.join(parity.REPO, "target", "parity-real-books"))
     args = parser.parse_args()
 
@@ -170,11 +170,11 @@ def main():
     seven_zip = seven_zip_path()
     if seven_zip:
         env["PATH"] = seven_zip + os.pathsep + env["PATH"]
-    mangapress = os.path.abspath(args.mangapress) if args.mangapress else None
-    if not mangapress:
-        print("building mangapress ...")
-        run(["cargo", "build", "--release", "--locked", "-p", "mangapress-cli"])
-        mangapress = os.path.join(parity.REPO, "target", "release", "mangapress" + (".exe" if os.name == "nt" else ""))
+    mangaprep = os.path.abspath(args.mangaprep) if args.mangaprep else None
+    if not mangaprep:
+        print("building mangaprep ...")
+        run(["cargo", "build", "--release", "--locked", "-p", "mangaprep-cli"])
+        mangaprep = os.path.join(parity.REPO, "target", "release", "mangaprep" + (".exe" if os.name == "nt" else ""))
     work = os.path.abspath(args.work)
     os.makedirs(work, exist_ok=True)
 
@@ -188,23 +188,23 @@ def main():
             for fmt in args.formats.split(","):
                 index += 1
                 base = os.path.join(work, f"{index:03d}")
-                kcc_dir, temporary, ours = base + "_kcc", base + "_tmp", base + f"_mangapress.{fmt}"
+                kcc_dir, temporary, ours = base + "_kcc", base + "_tmp", base + f"_mangaprep.{fmt}"
                 for folder in (kcc_dir, temporary):
                     shutil.rmtree(folder, ignore_errors=True)
                     os.makedirs(folder)
                 run([sys.executable, os.path.join(kcc, "kcc-c2e.py"), *kcc_flags, *webtoon[0], "-f", fmt.upper(),
                      "-t", title, "-a", AUTHOR, "-o", kcc_dir, book],
                     env=dict(env, TEMP=temporary, TMP=temporary, TMPDIR=temporary))
-                run([mangapress, book, *our_flags, *webtoon[1], "--format", fmt, "--output", ours,
+                run([mangaprep, book, *our_flags, *webtoon[1], "--format", fmt, "--output", ours,
                      f"--title={title}", f"--author={AUTHOR}"])
                 theirs_path = max((os.path.join(kcc_dir, name) for name in os.listdir(kcc_dir)), key=os.path.getsize)
                 problems, largest = compare(READERS[fmt](theirs_path), READERS[fmt](ours), fmt, args.webtoon)
                 sizes = os.path.getsize(theirs_path), os.path.getsize(ours)
                 if max(sizes) > SIZE_RATIO * min(sizes):
-                    problems.append(f"file size: KCC {sizes[0] / 1e6:.1f} MB, mangapress {sizes[1] / 1e6:.1f} MB")
+                    problems.append(f"file size: KCC {sizes[0] / 1e6:.1f} MB, mangaprep {sizes[1] / 1e6:.1f} MB")
                 failures += [f"{title} [{profile} {fmt}]: {problem}" for problem in problems]
                 print(f"  {'ok  ' if not problems else 'FAIL'} {title[:40]:40s} {profile:9s} {fmt:4s} "
-                      f"largest mean difference {largest:.2f}, KCC {sizes[0] / 1e6:6.1f} MB, mangapress {sizes[1] / 1e6:6.1f} MB", flush=True)
+                      f"largest mean difference {largest:.2f}, KCC {sizes[0] / 1e6:6.1f} MB, mangaprep {sizes[1] / 1e6:6.1f} MB", flush=True)
 
     print()
     if failures:
@@ -212,7 +212,7 @@ def main():
         for failure in failures:
             print("  -", failure)
         raise SystemExit(1)
-    print("mangapress makes the same books as KCC")
+    print("mangaprep makes the same books as KCC")
 
 
 if __name__ == "__main__":

@@ -147,7 +147,7 @@ def run_suite(binary, jar, directory, java, cases=CASES):
                 if rejected:
                     verify_bmp_rejection(result.returncode, result.stdout, result.stderr, book)
                 elif result.returncode != 0 or result.stderr:
-                    raise ValueError(f"mangapress failed: exit={result.returncode}; inspect {log}")
+                    raise ValueError(f"mangaprep failed: exit={result.returncode}; inspect {log}")
                 if dry_run and book.exists():
                     raise ValueError("dry run unexpectedly wrote a book")
                 if not dry_run and not rejected and (not book.is_file() or book.stat().st_size == 0):
@@ -188,7 +188,7 @@ def run_suite(binary, jar, directory, java, cases=CASES):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive", type=Path, help="offline copy of the pinned official EPUBCheck ZIP")
-    parser.add_argument("--java", default="java", help="Java executable (not needed by mangapress itself)")
+    parser.add_argument("--java", default="java", help="Java executable (not needed by mangaprep itself)")
     parser.add_argument("--work", type=Path, default=ROOT / "target/epubcheck/books")
     args = parser.parse_args()
     args.work.mkdir(parents=True, exist_ok=True)
@@ -196,9 +196,9 @@ def main():
     print(f"EPUBCheck {VERSION}: artifacts in {directory}", flush=True)
     try:
         jar = prepare_tool(directory, args.archive)
-        subprocess.run(["cargo", "build", "--release", "--locked", "-p", "mangapress-cli"],
+        subprocess.run(["cargo", "build", "--release", "--locked", "-p", "mangaprep-cli"],
                        cwd=ROOT, check=True)
-        binary = ROOT / "target/release" / ("mangapress.exe" if os.name == "nt" else "mangapress")
+        binary = ROOT / "target/release" / ("mangaprep.exe" if os.name == "nt" else "mangaprep")
         checked = run_suite(binary, jar, directory, args.java)
     except (OSError, ValueError, subprocess.CalledProcessError, zipfile.BadZipFile) as error:
         parser.exit(1, f"EPUB conformance checks could not complete: {error}; artifacts: {directory}\n")

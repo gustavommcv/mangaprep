@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
-# Installs a verified mangapress release for macOS/Linux.
-#   curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangapress/main/install.sh | sh
+# Installs a verified mangaprep release for macOS/Linux.
+#   curl -fsSL https://raw.githubusercontent.com/gustavommcv/mangaprep/main/install.sh | sh
 set -eu
 
-REPO="gustavommcv/mangapress"
-BIN_NAME="mangapress"
-INSTALL_DIR="${MANGAPRESS_INSTALL_DIR:-$HOME/.local/bin}"
-VERSION="${MANGAPRESS_VERSION:-latest}"
-LICENSE_DIR="$INSTALL_DIR/mangapress-licenses"
+REPO="gustavommcv/mangaprep"
+BIN_NAME="mangaprep"
+INSTALL_DIR="${MANGAPREP_INSTALL_DIR:-$HOME/.local/bin}"
+VERSION="${MANGAPREP_VERSION:-latest}"
+LICENSE_DIR="$INSTALL_DIR/mangaprep-licenses"
 
 detect_os() {
   case "$(uname -s)" in
@@ -121,7 +121,7 @@ for NOTICE in LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md DEPENDENCY-LICEN
   fi
 done
 
-echo "Installed mangapress to $INSTALL_DIR/$BIN_NAME"
+echo "Installed mangaprep to $INSTALL_DIR/$BIN_NAME"
 echo "License notices: $LICENSE_DIR"
 
 case ":$PATH:" in

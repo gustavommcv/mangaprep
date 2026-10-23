@@ -1,11 +1,11 @@
 # KCC 12.1.1 coverage map
 
 This inventory describes executable checks, not a claim of exhaustive parity. The oracle imports
-the separate, pinned KCC checkout; no upstream implementation is copied into mangapress.
+the separate, pinned KCC checkout; no upstream implementation is copied into mangaprep.
 See [how to run the checks](README.md) and [ADR 0013](../../docs/adr/0013-follow-a-named-kcc-release.md).
 
 **Direct** means the same synthetic input/options reach both tools and their outputs are compared.
-**Rust** means mangapress has regression tests but that behavior is not compared to a live KCC run.
+**Rust** means mangaprep has regression tests but that behavior is not compared to a live KCC run.
 **Extended** cases run before release or through the manual workflow's `extended` input.
 
 The independent [complete-EPUB gate](../epubcheck/README.md) also checks selected device geometry,
@@ -21,7 +21,7 @@ cover automatic selection and explicit overrides.
 | --- | --- | --- |
 | `--profile`, `--format` | Full K11 page matrix; seven representative profiles; EPUB/CBZ books | Rust device-resolution tests also cover PDF plans. Not every profile/format pairing. Auto-format differences are deliberate. |
 | `--customwidth`, `--customheight` | KDX/KS3 one-axis override regressions; odd `OTHER` targets; the gray levels of an old Kindle (K1) and the JPEG quality of a Scribe (KS3) with a custom size, pages and cover | Default JPEG/palette behavior with overrides on other device families is not directly covered. |
-| `--cropping`, `--croppingpower`, `--croppingminimum`, `--preservemargin`, `--ipc` | Named crop scenarios, 10% cap boundaries; 81% area boundary in extended checks | KCC uses fractions/integers where mangapress uses percentages/enums. Tiny KCC edge-detector crashes are not mangapress failures. |
+| `--cropping`, `--croppingpower`, `--croppingminimum`, `--preservemargin`, `--ipc` | Named crop scenarios, 10% cap boundaries; 81% area boundary in extended checks | KCC uses fractions/integers where mangaprep uses percentages/enums. Tiny KCC edge-detector crashes are not mangaprep failures. |
 | `--manga-style`, `--splitter`, `--rotateright`, `--rotatefirst`, `--norotate`, `--maximizestrips` | All spread roles/order; asymmetric odd/square inputs; LTR/RTL and color interactions in extended checks | Upright Kindle EPUB width-cap difference is deliberate; that baseline uses KoC. |
 | `--upscale`, `--stretch`, `--wallpaper`, `--blackborders`, `--whiteborders` | Named page/CBZ scenarios | Rust tests cover conflicting border flags and sizing branches; not every interaction is directly compared. |
 | `--gamma`, `--autolevel`, `--noautocontrast`, `--colorautocontrast`, `--eraserainbow` | Gray/color scenarios including interacting contrast options | Odd-size rainbow output differences are documented. The new odd-size corpus does not enable rainbow removal. |
@@ -51,17 +51,17 @@ the gray levels and JPEG quality that a custom size gives an old Kindle or a Scr
 their chroma at half size. Every JPEG and PNG the books compare is also compared in size: a JPEG within 5% of KCC's
 (the same quantization tables, chroma layout and number of scans), a PNG at most 1.4 times as large.
 
-## Mangapress-only behavior and excluded KCC features
+## Mangaprep-only behavior and excluded KCC features
 
 `--cover`, `--spreads` (explicit label-file selection), `--nested-toc`, `--dry-run`, `--quiet`,
-`--list-profiles`, `--json-events`, and `--protocol-version` are mangapress interfaces, not matching
+`--list-profiles`, `--json-events`, and `--protocol-version` are mangaprep interfaces, not matching
 KCC flags. Core and CLI tests cover them; they are not advertised as direct KCC comparisons.
 Labelled-spread joining is shared behavior but remains Rust-only: KCC flattens chapter folders,
-whereas mangapress preserves them. Covers-folder selection also deliberately differs.
+whereas mangaprep preserves them. Covers-folder selection also deliberately differs.
 
-PDF serialization is not compared: Rust tests validate mangapress's PDF output, and its bookmarks, which KCC's PDF does not have (ADR 0026). The oracle never
+PDF serialization is not compared: Rust tests validate mangaprep's PDF output, and its bookmarks, which KCC's PDF does not have (ADR 0026). The oracle never
 calls its placeholder PDF or MozJPEG imports. MOBI/AZW3, Panel View, Scribe Amazon page splitting,
-light novels, archive/PDF/EPUB input variants beyond mangapress's scope, deletion, batch splitting,
+light novels, archive/PDF/EPUB input variants beyond mangaprep's scope, deletion, batch splitting,
 file fusion, target-size limits, MozJPEG and WebP output are excluded/deferred by ADR 0013/0014,
 not missing requirements. Safe input limits and link containment follow ADRs 0015/0017 rather
 than reproducing unsafe upstream behavior.

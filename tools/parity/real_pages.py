@@ -1,4 +1,4 @@
-"""Compares mangapress's page processing with KCC's on your own manga, page by page.
+"""Compares mangaprep's page processing with KCC's on your own manga, page by page.
 
 The built-in comparisons use drawn pages. Before a release that changes processing, decoding or
 book output, run this on real volumes too. They stay outside the repository.
@@ -91,7 +91,7 @@ def measure(files, kcc_dir, dump_dir):
     report = parity.Report()
     parity.compare_pages(report, "", files, kcc_dir, dump_dir)
     kcc = parity.manifest_pages(kcc_dir, "kcc.json")
-    ours = parity.manifest_pages(dump_dir, "mangapress.json")
+    ours = parity.manifest_pages(dump_dir, "mangaprep.json")
     pieces = []
     for path, theirs, mine in zip(files, kcc, ours):
         for a, b in zip(theirs["pieces"], mine["pieces"]):
@@ -131,7 +131,7 @@ def main():
     oracle = [sys.executable, os.path.join(parity.HERE, "kcc_oracle.py"), kcc]
 
     print("building parity_dump ...")
-    parity.run(["cargo", "build", "--release", "--locked", "-p", "mangapress-core", "--example", "parity_dump"], cwd=parity.REPO)
+    parity.run(["cargo", "build", "--release", "--locked", "-p", "mangaprep-core", "--example", "parity_dump"], cwd=parity.REPO)
     dump = os.path.join(parity.REPO, "target", "release", "examples", "parity_dump" + (".exe" if os.name == "nt" else ""))
 
     runs = []
@@ -153,7 +153,7 @@ def main():
     failures, worst = [], []
     print(f"comparing against KCC {version}")
     for index, (book, name, files, kcc_args, dump_args) in enumerate(runs):
-        kcc_dir, dump_dir = os.path.join(work, f"{index:03d}_kcc"), os.path.join(work, f"{index:03d}_mangapress")
+        kcc_dir, dump_dir = os.path.join(work, f"{index:03d}_kcc"), os.path.join(work, f"{index:03d}_mangaprep")
         list_file = os.path.join(work, f"{index:03d}_list.txt")
         Path(list_file).write_text("\n".join(files) + "\n", encoding="utf-8")
         parity.run(oracle + [kcc_dir, list_file] + kcc_args)
@@ -173,7 +173,7 @@ def main():
         for profile in profiles:
             options = kcc_cli.checkOptions(kcc_cli.makeParser().parse_args(["-p", profile, "-w", "-f", "EPUB", "unused-input"]))
             width, height = options.profileData[1]
-            kcc_dir, dump_dir = os.path.join(work, f"webtoon_{profile}_kcc"), os.path.join(work, f"webtoon_{profile}_mangapress")
+            kcc_dir, dump_dir = os.path.join(work, f"webtoon_{profile}_kcc"), os.path.join(work, f"webtoon_{profile}_mangaprep")
             parity.run(oracle + [kcc_dir, "--webtoon-dir", chapter, str(width), str(height)])
             parity.run([dump, dump_dir, chapter, profile, "--webtoon-dir"])
             theirs = os_sorted(os.listdir(kcc_dir))
@@ -182,7 +182,7 @@ def main():
             if not same(kcc_dir + "_strip.png", os.path.join(dump_dir, "strip.png")):
                 problem = "merged strips differ"
             elif len(theirs) != len(mine):
-                problem = f"KCC cut {len(theirs)} pages, mangapress {len(mine)}"
+                problem = f"KCC cut {len(theirs)} pages, mangaprep {len(mine)}"
             elif not all(same(os.path.join(kcc_dir, a), os.path.join(dump_dir, b)) for a, b in zip(theirs, mine)):
                 problem = "cut pages differ"
             else:
@@ -210,7 +210,7 @@ def main():
         for failure in failures:
             print("  -", failure)
         raise SystemExit(1)
-    print(f"mangapress matches KCC {version} on these pages")
+    print(f"mangaprep matches KCC {version} on these pages")
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ from trees import INFO, comic_info, corpus_pages, cut_short, interlaced_png, pal
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 
-# How large mangapress's file may be against KCC's for the same page, as a ratio of bytes. A JPEG is built
+# How large mangaprep's file may be against KCC's for the same page, as a ratio of bytes. A JPEG is built
 # by two encoders that share the tables and the way the tables are chosen, so the files are nearly the same
 # size; a PNG is deflated by two libraries, and a page may be somewhat larger here but not several times.
 SIZE_RATIOS = {"JPEG": (0.95, 1.05), "PNG": (0.0, 1.4)}
@@ -196,27 +196,27 @@ def read_cbz(path):
 def compare_image(theirs, ours, *, codec=False, kindle_png=False):
     with Image.open(io.BytesIO(theirs)) as a, Image.open(io.BytesIO(ours)) as b:
         if a.size != b.size:
-            raise ValueError(f"image size: KCC {a.size}, mangapress {b.size}")
+            raise ValueError(f"image size: KCC {a.size}, mangaprep {b.size}")
         if codec:
             allowed_png = kindle_png and a.format == "GIF" and b.format == "PNG"
             if a.format != b.format and not allowed_png:
-                raise ValueError(f"codec: KCC {a.format}, mangapress {b.format}")
+                raise ValueError(f"codec: KCC {a.format}, mangaprep {b.format}")
             if a.format == b.format == "PNG" and theirs[24:26] != ours[24:26]:
                 # IHDR: bit depth and color type, not compression bytes.
-                raise ValueError(f"PNG depth/type: KCC {list(theirs[24:26])}, mangapress {list(ours[24:26])}")
+                raise ValueError(f"PNG depth/type: KCC {list(theirs[24:26])}, mangaprep {list(ours[24:26])}")
             if a.format == "JPEG":
                 if a.quantization != b.quantization:
                     raise ValueError("JPEG quantization tables differ")
                 sampling = [JpegImagePlugin.get_sampling(image) for image in (a, b)]
                 if sampling[0] != sampling[1]:
-                    raise ValueError(f"JPEG chroma: KCC {SAMPLING[sampling[0]]}, mangapress {SAMPLING[sampling[1]]}")
+                    raise ValueError(f"JPEG chroma: KCC {SAMPLING[sampling[0]]}, mangaprep {SAMPLING[sampling[1]]}")
                 scans = [scan_count(data) for data in (theirs, ours)]
                 if scans[0] != scans[1]:
-                    raise ValueError(f"JPEG scans: KCC {scans[0]}, mangapress {scans[1]}")
+                    raise ValueError(f"JPEG scans: KCC {scans[0]}, mangaprep {scans[1]}")
             if a.format == b.format and a.format in SIZE_RATIOS:
                 low, high = SIZE_RATIOS[a.format]
                 if not low <= len(ours) / len(theirs) <= high:
-                    raise ValueError(f"{a.format} size: KCC {len(theirs)} bytes, mangapress {len(ours)} "
+                    raise ValueError(f"{a.format} size: KCC {len(theirs)} bytes, mangaprep {len(ours)} "
                                      f"({len(ours) / len(theirs):.2f} times; allowed {low} to {high})")
         x, y = np.asarray(a.convert("RGB"), dtype=np.int16), np.asarray(b.convert("RGB"), dtype=np.int16)
         gray = np.array_equal(x[:, :, 0], x[:, :, 1]) and np.array_equal(x[:, :, 1], x[:, :, 2])
@@ -233,10 +233,10 @@ def compare_book(theirs, ours, *, codec=False, originals=None, kindle_png=False)
     if not theirs["pages"] or not ours["pages"]:
         raise ValueError("empty book comparison")
     if len(theirs["pages"]) != len(ours["pages"]):
-        raise ValueError(f"page count: KCC {len(theirs['pages'])}, mangapress {len(ours['pages'])}")
+        raise ValueError(f"page count: KCC {len(theirs['pages'])}, mangaprep {len(ours['pages'])}")
     for key in ("metadata", "direction", "sides", "navigation", "comicinfo"):
         if theirs.get(key) != ours.get(key):
-            raise ValueError(f"{key}: KCC {theirs.get(key)}, mangapress {ours.get(key)}")
+            raise ValueError(f"{key}: KCC {theirs.get(key)}, mangaprep {ours.get(key)}")
     for number, (a, b) in enumerate(zip(theirs["pages"], ours["pages"]), 1):
         try:
             compare_image(a, b, codec=codec, kindle_png=kindle_png)
@@ -259,8 +259,8 @@ def main():
     version, _, _, _ = load_kcc(checkout)
     if version != REFERENCE_KCC:
         parser.error(f"book comparisons require the named KCC {REFERENCE_KCC}, got {version}")
-    run(["cargo", "build", "--release", "--locked", "-p", "mangapress-cli"], cwd=REPO)
-    binary = str(Path(REPO) / "target/release" / ("mangapress.exe" if os.name == "nt" else "mangapress"))
+    run(["cargo", "build", "--release", "--locked", "-p", "mangaprep-cli"], cwd=REPO)
+    binary = str(Path(REPO) / "target/release" / ("mangaprep.exe" if os.name == "nt" else "mangaprep"))
     oracle = [sys.executable, str(Path(HERE) / "kcc_oracle.py"), checkout]
     args.work = args.work.resolve()
     args.work.mkdir(parents=True, exist_ok=True)
@@ -296,7 +296,7 @@ def main():
         kcc_dir = directory / "kcc"
         kcc_dir.mkdir()
         output = kcc_dir / f"result.{case.format}"
-        ours = directory / f"mangapress.{case.format}"
+        ours = directory / f"mangaprep.{case.format}"
         png_flags = [] if case.jpeg else ["--forcepng"]
         kcc_crop, our_crop = ([], []) if case.crop else (["-c", "0"], ["--cropping", "disabled"])
         with tempfile.TemporaryDirectory(dir=kcc_dir) as temporary:

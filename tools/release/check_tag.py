@@ -28,7 +28,7 @@ def main():
         version = check_tag(args.tag, ROOT / "Cargo.toml")
     except (OSError, ValueError, KeyError) as error:
         parser.exit(1, f"Release tag validation failed: {error}\n")
-    print(f"Release tag matches mangapress {version}")
+    print(f"Release tag matches mangaprep {version}")
 
 
 if __name__ == "__main__":

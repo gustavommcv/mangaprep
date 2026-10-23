@@ -28,7 +28,7 @@ Generated texts are not committed; each release regenerates them from its own lo
 ## Updating dependencies
 
 `about.toml` chooses licenses from the alternatives declared by dependencies; it does not
-change mangapress's MIT/Apache-2.0 license. cargo-about gathers the files and resolves SPDX
+change mangaprep's MIT/Apache-2.0 license. cargo-about gathers the files and resolves SPDX
 expressions. The template preserves their text and associates each notice with crate
 names and versions. No local source paths are distributed.
 

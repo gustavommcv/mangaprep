@@ -1,0 +1,571 @@
+//! `ComicInfo.xml` reading and title/author resolution.
+//!
+//! Upstream reference: `MetadataParser` and `getMetadata()`'s title/author
+//! precedence logic in KCC's `metadata.py`/`comic2ebook.py`. Unlike most of
+//! `mangaprep-core`'s other upstream references, `metadata.py` carries a normal
+//! ISC header upstream (see `docs/adr/0007-gplv3-boundary-kcc-image-rs.md`
+//! for which files *don't*) — still reimplemented in Rust idiom here
+//! rather than transliterated, but with less of the extra GPL-boundary
+//! caution that file needs.
+//!
+//! `ComicInfo.xml`'s per-page bookmarks (`<Page Image="N"
+//! Bookmark="..."/>`) replace the folder-derived table of contents in EPUB
+//! output, as they do upstream — parsed here into [`ComicInfo::bookmarks`]
+//! and applied by [`crate::ebook::epub`] (see `EpubOptions::bookmarks`). A
+//! bookmark with an empty name is dropped here; upstream would list it as a
+//! blank entry.
+
+use std::path::Path;
+
+/// Parsed `ComicInfo.xml` contents. Fields are `None`/empty when the
+/// corresponding element is absent, matching upstream's "only overwrite if
+/// present" behavior rather than upstream's own empty-string defaults.
+#[derive(Debug, Clone, Default)]
+pub struct ComicInfo {
+    pub series: Option<String>,
+    /// Kept as a string, not parsed to a number: upstream only ever
+    /// zero-pads it as text (`Volume.zfill(2)`) and never does arithmetic
+    /// on it.
+    pub volume: Option<String>,
+    pub number: Option<String>,
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub writers: Vec<String>,
+    pub pencillers: Vec<String>,
+    pub inkers: Vec<String>,
+    pub colorists: Vec<String>,
+    /// `(page_index, bookmark_name)`, the index counting the book's source
+    /// images from zero — see module docs.
+    pub bookmarks: Vec<(u32, String)>,
+}
+
+/// The text of a `ComicInfo.xml`, from its bytes. A file in UTF-16, which its byte order
+/// mark gives away, is read as such, as upstream reads it; anything else is taken as UTF-8,
+/// with a character it cannot decode replaced rather than refused.
+pub fn comic_info_text(bytes: &[u8]) -> String {
+    let utf16 = |rest: &[u8], unit: fn([u8; 2]) -> u16| {
+        // A half unit left at the end is dropped.
+        let (pairs, _) = rest.as_chunks::<2>();
+        let units: Vec<u16> = pairs.iter().map(|pair| unit(*pair)).collect();
+        String::from_utf16_lossy(&units)
+    };
+    match bytes {
+        [0xFF, 0xFE, rest @ ..] => utf16(rest, u16::from_le_bytes),
+        [0xFE, 0xFF, rest @ ..] => utf16(rest, u16::from_be_bytes),
+        _ => String::from_utf8_lossy(bytes).into_owned(),
+    }
+}
+
+/// `text` padded with zeros on the left to `width` characters, a sign kept in front of them
+/// (`-1` at width 3 is `-01`), as upstream's `zfill` does for the volume and the issue number.
+/// The text is padded, never parsed: a number written `2.5` or `1a` is left as it is.
+fn zero_fill(text: &str, width: usize) -> String {
+    let (sign, digits) = match text.chars().next() {
+        Some(sign @ ('+' | '-')) => (Some(sign), &text[1..]),
+        _ => (None, text),
+    };
+    let missing = width.saturating_sub(text.chars().count());
+    let mut filled = String::with_capacity(text.len() + missing);
+    filled.extend(sign);
+    filled.extend(std::iter::repeat_n('0', missing));
+    filled.push_str(digits);
+    filled
+}
+
+pub fn parse_comic_info_xml(xml: &str) -> crate::error::Result<ComicInfo> {
+    let doc = roxmltree::Document::parse(xml)
+        .map_err(|e| crate::error::Error::ComicInfo(e.to_string()))?;
+
+    let text_of = |tag: &str| -> Option<String> {
+        doc.descendants()
+            .find(|n| n.is_element() && n.has_tag_name(tag))
+            .and_then(|n| n.text())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+    };
+
+    let people_of = |tag: &str| -> Vec<String> {
+        let mut people: Vec<String> = text_of(tag)
+            .map(|s| {
+                s.split(", ")
+                    .map(|p| p.trim().to_string())
+                    .filter(|p| !p.is_empty())
+                    .collect()
+            })
+            .unwrap_or_default();
+        people.sort();
+        people.dedup();
+        people
+    };
+
+    let bookmarks: Vec<(u32, String)> = doc
+        .descendants()
+        .filter(|n| n.is_element() && n.has_tag_name("Page"))
+        .filter_map(|n| {
+            let image = n.attribute("Image")?.parse::<u32>().ok()?;
+            let bookmark = n.attribute("Bookmark")?;
+            if bookmark.is_empty() {
+                None
+            } else {
+                Some((image, bookmark.to_string()))
+            }
+        })
+        .collect();
+
+    Ok(ComicInfo {
+        series: text_of("Series"),
+        volume: text_of("Volume"),
+        number: text_of("Number"),
+        title: text_of("Title"),
+        summary: text_of("Summary"),
+        writers: people_of("Writer"),
+        pencillers: people_of("Penciller"),
+        inkers: people_of("Inker"),
+        colorists: people_of("Colorist"),
+        bookmarks,
+    })
+}
+
+/// `--metadatatitle`'s three modes, matching upstream's `0`/`1`/`2` exactly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MetadataTitleMode {
+    /// Use `Series`/`Volume`/`Number` only, never `ComicInfo.xml`'s own
+    /// `Title` field.
+    #[default]
+    SeriesOnly,
+    /// Append `: Title` after `Series`/`Volume`/`Number`.
+    Combine,
+    /// Use `ComicInfo.xml`'s `Title` field alone — overrides even a title
+    /// the user explicitly passed with `-t`, matching upstream exactly
+    /// (confirmed by reading `getMetadata()`: this check comes *before*
+    /// the "did the user set a title" branch, not after).
+    TitleOnly,
+}
+
+#[derive(Debug, Clone)]
+pub struct ResolvedMetadata {
+    pub title: String,
+    pub authors: Vec<String>,
+    pub summary: Option<String>,
+    /// `ComicInfo.xml`'s `Series`, whenever it has one — whatever the title
+    /// ended up being.
+    pub series: Option<String>,
+    /// Where this book sits in [`Self::series`]: `Volume.Number`, or
+    /// whichever of the two `ComicInfo.xml` has. Only known when the title
+    /// itself was built from `ComicInfo.xml` — upstream records the volume
+    /// and number as a side effect of composing that title, so an explicit
+    /// `-t`, or `--metadatatitle title-only`, leaves the series without a
+    /// position. Reproduced as upstream behaves, not as it arguably should.
+    pub series_position: Option<String>,
+}
+
+/// `getMetadata()`'s title/author precedence. `fallback_title` is what
+/// upstream derives from the input path's basename when the user passes
+/// neither `-t` nor a title-bearing `ComicInfo.xml`.
+///
+/// One deliberate divergence: upstream's ultimate fallback author is the
+/// literal string `"KCC"` (self-attributing the *converter* as author when
+/// nothing else is known). Self-attributing mangaprep the same way makes
+/// even less sense for a tool with no relation to the work's actual
+/// authorship, so the fallback here is `"Unknown"` instead.
+pub fn resolve(
+    info: Option<&ComicInfo>,
+    user_title: Option<&str>,
+    user_author: Option<&str>,
+    fallback_title: &str,
+    metadata_title_mode: MetadataTitleMode,
+) -> ResolvedMetadata {
+    let default_title = user_title.is_none();
+    let default_author = user_author.is_none();
+
+    let mut title = user_title
+        .map(str::to_string)
+        .unwrap_or_else(|| fallback_title.to_string());
+    let mut authors: Vec<String> = user_author.map(|a| vec![a.to_string()]).unwrap_or_default();
+    let mut summary = None;
+    let mut series = None;
+    let mut series_position = None;
+    let present = |value: &Option<String>| value.clone().filter(|v| !v.is_empty());
+
+    if let Some(info) = info {
+        summary = info.summary.clone();
+        series = present(&info.series);
+
+        if metadata_title_mode == MetadataTitleMode::TitleOnly {
+            if let Some(t) = &info.title {
+                title = t.clone();
+            }
+        } else if default_title {
+            if let Some(series) = &info.series {
+                title = series.clone();
+            }
+            let mut suffix = String::new();
+            if let Some(volume) = &info.volume {
+                suffix.push_str(&format!(" Vol. {}", zero_fill(volume, 2)));
+            }
+            if let Some(number) = &info.number {
+                suffix.push_str(&format!(" #{}", zero_fill(number, 3)));
+            }
+            if metadata_title_mode == MetadataTitleMode::Combine {
+                if let Some(t) = &info.title {
+                    suffix.push_str(&format!(": {t}"));
+                }
+            }
+            title.push_str(&suffix);
+            series_position = match (present(&info.volume), present(&info.number)) {
+                (Some(volume), Some(number)) => Some(format!("{volume}.{number}")),
+                (Some(volume), None) => Some(volume),
+                (None, number) => number,
+            };
+        }
+
+        if default_author {
+            let mut people: Vec<String> = info
+                .writers
+                .iter()
+                .chain(info.pencillers.iter())
+                .chain(info.inkers.iter())
+                .chain(info.colorists.iter())
+                .cloned()
+                .collect();
+            people.sort();
+            people.dedup();
+            authors = people;
+        }
+    }
+
+    if authors.is_empty() {
+        authors = vec!["Unknown".to_string()];
+    }
+
+    ResolvedMetadata {
+        title,
+        authors,
+        summary,
+        series,
+        series_position,
+    }
+}
+
+/// Extracts a top-level `ComicInfo.xml` entry from already-extracted
+/// archive entries, removing it from the list (matching upstream's
+/// `os.remove(xmlPath)` before the chapter-building walk, so it's never
+/// mistaken for a page image) and returning its raw bytes for both parsing
+/// and, if `--keepcomicinfo` is set, re-embedding into CBZ output.
+///
+/// Only matches at the archive root — a `ComicInfo.xml` inside a chapter
+/// subfolder is left alone (and would be filtered out downstream anyway,
+/// same as any other non-image file, once `group_into_chapters`/page
+/// processing gets to it).
+pub fn extract_comic_info_entry(entries: &mut Vec<crate::archive::SourceEntry>) -> Option<Vec<u8>> {
+    let root_xml = Path::new("ComicInfo.xml");
+    let position = entries
+        .iter()
+        .position(|entry| entry.relative_path == root_xml)?;
+    Some(entries.remove(position).bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SAMPLE_XML: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+<ComicInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Series>Chainsaw Man</Series>
+  <Volume>1</Volume>
+  <Number>001</Number>
+  <Title>A Dog and a Chainsaw</Title>
+  <Summary>Denji fights devils.</Summary>
+  <Writer>Tatsuki Fujimoto</Writer>
+  <Penciller>Tatsuki Fujimoto, Someone Else</Penciller>
+  <Pages>
+    <Page Image="0" />
+    <Page Image="5" Bookmark="Chapter 2" />
+    <Page Image="12" Bookmark="Chapter 3" />
+  </Pages>
+</ComicInfo>"#;
+
+    #[test]
+    fn parses_scalar_fields() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        assert_eq!(info.series.as_deref(), Some("Chainsaw Man"));
+        assert_eq!(info.volume.as_deref(), Some("1"));
+        assert_eq!(info.number.as_deref(), Some("001"));
+        assert_eq!(info.title.as_deref(), Some("A Dog and a Chainsaw"));
+        assert_eq!(info.summary.as_deref(), Some("Denji fights devils."));
+    }
+
+    #[test]
+    fn dedupes_and_sorts_people_lists() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        assert_eq!(info.writers, vec!["Tatsuki Fujimoto".to_string()]);
+        assert_eq!(
+            info.pencillers,
+            vec!["Someone Else".to_string(), "Tatsuki Fujimoto".to_string()]
+        );
+    }
+
+    #[test]
+    fn missing_fields_are_none_not_empty_string() {
+        let info = parse_comic_info_xml("<ComicInfo></ComicInfo>").unwrap();
+        assert_eq!(info.series, None);
+        assert!(info.writers.is_empty());
+    }
+
+    #[test]
+    fn parses_only_pages_with_both_image_and_bookmark() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        assert_eq!(
+            info.bookmarks,
+            vec![(5, "Chapter 2".to_string()), (12, "Chapter 3".to_string())]
+        );
+    }
+
+    #[test]
+    fn resolve_falls_back_to_provided_title_and_unknown_author_with_no_comicinfo() {
+        let resolved = resolve(
+            None,
+            None,
+            None,
+            "My Folder Name",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(resolved.title, "My Folder Name");
+        assert_eq!(resolved.authors, vec!["Unknown".to_string()]);
+    }
+
+    #[test]
+    fn resolve_series_only_mode_builds_series_plus_volume_and_number() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(resolved.title, "Chainsaw Man Vol. 01 #001");
+    }
+
+    #[test]
+    fn resolve_combine_mode_appends_the_xml_title() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::Combine,
+        );
+        assert_eq!(
+            resolved.title,
+            "Chainsaw Man Vol. 01 #001: A Dog and a Chainsaw"
+        );
+    }
+
+    #[test]
+    fn resolve_title_only_mode_overrides_even_an_explicit_user_title() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            Some("User Provided Title"),
+            None,
+            "fallback",
+            MetadataTitleMode::TitleOnly,
+        );
+        assert_eq!(resolved.title, "A Dog and a Chainsaw");
+    }
+
+    #[test]
+    fn resolve_never_touches_an_explicit_user_title_outside_title_only_mode() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            Some("User Provided Title"),
+            None,
+            "fallback",
+            MetadataTitleMode::Combine,
+        );
+        assert_eq!(resolved.title, "User Provided Title");
+    }
+
+    #[test]
+    fn resolve_never_touches_an_explicit_user_author() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            None,
+            Some("Explicit Author"),
+            "fallback",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(resolved.authors, vec!["Explicit Author".to_string()]);
+    }
+
+    #[test]
+    fn resolve_builds_author_list_from_all_role_fields_when_not_overridden() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(
+            resolved.authors,
+            vec!["Someone Else".to_string(), "Tatsuki Fujimoto".to_string()]
+        );
+    }
+
+    #[test]
+    fn extract_comic_info_entry_removes_only_the_root_level_file() {
+        use crate::archive::SourceEntry;
+        use std::path::PathBuf;
+
+        let mut entries = vec![
+            SourceEntry {
+                relative_path: PathBuf::from("ComicInfo.xml"),
+                bytes: b"root".to_vec(),
+            },
+            SourceEntry {
+                relative_path: PathBuf::from("c001/ComicInfo.xml"),
+                bytes: b"nested".to_vec(),
+            },
+            SourceEntry {
+                relative_path: PathBuf::from("c001/p0001.jpg"),
+                bytes: b"page".to_vec(),
+            },
+        ];
+
+        let extracted = extract_comic_info_entry(&mut entries);
+        assert_eq!(extracted, Some(b"root".to_vec()));
+        assert_eq!(entries.len(), 2);
+        assert!(entries
+            .iter()
+            .any(|e| e.relative_path == std::path::Path::new("c001/ComicInfo.xml")));
+    }
+
+    #[test]
+    fn extract_comic_info_entry_returns_none_when_absent() {
+        let mut entries: Vec<crate::archive::SourceEntry> = Vec::new();
+        assert_eq!(extract_comic_info_entry(&mut entries), None);
+    }
+
+    #[test]
+    fn series_is_always_reported_but_its_position_only_with_a_comicinfo_title() {
+        let info = parse_comic_info_xml(SAMPLE_XML).unwrap();
+
+        // Title built from ComicInfo.xml: the volume and number come with it.
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(resolved.series.as_deref(), Some("Chainsaw Man"));
+        assert_eq!(resolved.series_position.as_deref(), Some("1.001"));
+
+        // An explicit title, or the ComicInfo title alone: upstream never
+        // records the volume and number, so the series has no position.
+        let resolved = resolve(
+            Some(&info),
+            Some("My Title"),
+            None,
+            "fallback",
+            MetadataTitleMode::SeriesOnly,
+        );
+        assert_eq!(resolved.series.as_deref(), Some("Chainsaw Man"));
+        assert_eq!(resolved.series_position, None);
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::TitleOnly,
+        );
+        assert_eq!(resolved.series_position, None);
+
+        let resolved = resolve(None, None, None, "fallback", MetadataTitleMode::SeriesOnly);
+        assert_eq!((resolved.series, resolved.series_position), (None, None));
+    }
+
+    #[test]
+    fn comic_info_text_reads_utf8_with_or_without_a_byte_order_mark() {
+        assert_eq!(comic_info_text("<a>é</a>".as_bytes()), "<a>é</a>");
+        let mut marked = vec![0xEF, 0xBB, 0xBF];
+        marked.extend("<a/>".as_bytes());
+        assert_eq!(comic_info_text(&marked), "\u{FEFF}<a/>");
+    }
+
+    #[test]
+    fn comic_info_text_reads_utf16_of_either_byte_order() {
+        let text = "<a>雨 é</a>";
+        let little: Vec<u8> = [0xFF, 0xFE]
+            .into_iter()
+            .chain(text.encode_utf16().flat_map(u16::to_le_bytes))
+            .collect();
+        let big: Vec<u8> = [0xFE, 0xFF]
+            .into_iter()
+            .chain(text.encode_utf16().flat_map(u16::to_be_bytes))
+            .collect();
+
+        assert_eq!(comic_info_text(&little), text);
+        assert_eq!(comic_info_text(&big), text);
+    }
+
+    #[test]
+    fn comic_info_text_replaces_what_it_cannot_decode_instead_of_refusing_the_file() {
+        assert_eq!(comic_info_text(b"<a>\xFF</a>"), "<a>\u{FFFD}</a>");
+        // A half unit at the end of a UTF-16 file, and nothing at all after the mark.
+        assert_eq!(comic_info_text(&[0xFF, 0xFE, b'<', 0, b'a']), "<");
+        assert_eq!(comic_info_text(&[0xFF, 0xFE]), "");
+    }
+
+    #[test]
+    fn a_utf16_file_that_declares_its_encoding_parses() {
+        let xml = "<?xml version=\"1.0\" encoding=\"utf-16\"?><ComicInfo><Series>Sixteen</Series></ComicInfo>";
+        let bytes: Vec<u8> = [0xFF, 0xFE]
+            .into_iter()
+            .chain(xml.encode_utf16().flat_map(u16::to_le_bytes))
+            .collect();
+
+        let info = parse_comic_info_xml(&comic_info_text(&bytes)).unwrap();
+
+        assert_eq!(info.series.as_deref(), Some("Sixteen"));
+    }
+
+    #[test]
+    fn zero_fill_pads_on_the_left_and_keeps_a_sign_in_front() {
+        assert_eq!(zero_fill("7", 3), "007");
+        assert_eq!(zero_fill("12", 2), "12");
+        assert_eq!(zero_fill("123", 2), "123");
+        assert_eq!(zero_fill("-1", 3), "-01");
+        assert_eq!(zero_fill("+1", 3), "+01");
+        assert_eq!(zero_fill("-1", 2), "-1");
+        assert_eq!(zero_fill("2.5", 4), "02.5");
+        assert_eq!(zero_fill("", 2), "00");
+        assert_eq!(zero_fill("-", 3), "-00");
+    }
+
+    #[test]
+    fn a_negative_issue_number_is_padded_after_its_sign() {
+        let info = ComicInfo {
+            series: Some("S".to_string()),
+            number: Some("-1".to_string()),
+            volume: Some("-2".to_string()),
+            ..ComicInfo::default()
+        };
+
+        let resolved = resolve(
+            Some(&info),
+            None,
+            None,
+            "fallback",
+            MetadataTitleMode::default(),
+        );
+
+        assert_eq!(resolved.title, "S Vol. -2 #-01");
+    }
+}

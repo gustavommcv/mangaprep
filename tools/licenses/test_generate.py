@@ -40,7 +40,7 @@ class NoticeValidationTests(unittest.TestCase):
             validate_report(self.report, self.rendered)
 
     def test_only_own_workspace_crates_can_use_separately_shipped_licenses(self):
-        for name in ("mangapress-cli", "mangapress-core"):
+        for name in ("mangaprep-cli", "mangaprep-core"):
             with self.subTest(name=name):
                 report = copy.deepcopy(self.report)
                 entry = report["licenses"][0]
@@ -58,9 +58,9 @@ class NoticeValidationTests(unittest.TestCase):
     def test_registry_crate_cannot_impersonate_a_workspace_crate(self):
         entry = self.report["licenses"][0]
         entry["source_path"] = None
-        entry["used_by"][0]["crate"]["name"] = "mangapress-core"
+        entry["used_by"][0]["crate"]["name"] = "mangaprep-core"
         with self.assertRaisesRegex(ValueError, "generic MIT fallback"):
-            validate_report(self.report, f"- mangapress-core 1.2.3\n{self.original}")
+            validate_report(self.report, f"- mangaprep-core 1.2.3\n{self.original}")
 
     def test_escaped_or_truncated_text_is_rejected(self):
         for rendered in (

@@ -91,7 +91,7 @@ def transparent_gif(index, transparent=5):
     """A GIF with a transparent color, whose first color is a visible green.
 
     A drawn page with texture, not flat areas: where the data ends in the middle of a long
-    run of one color, KCC's decoder and mangapress's differ in how much of the run they keep.
+    run of one color, KCC's decoder and mangaprep's differ in how much of the run they keep.
     """
     image = make_corpus.page(100 + index, colour=True).convert("RGB").resize((300, 400)).quantize(32)
     colors = image.getpalette()

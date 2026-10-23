@@ -219,10 +219,10 @@ class EventAndFixtureTests(unittest.TestCase):
         self.book.write_bytes(b"book")
         self.case = cases.Case("test")
         self.events = [
-            {"tool": "mangapress", "protocol_version": 1, "sequence": 1, "type": "stage",
+            {"tool": "mangaprep", "protocol_version": 1, "sequence": 1, "type": "stage",
              "stage": "plan", "state": "completed", "format": "epub", "profile": "K11",
              "width": 1072, "height": 1448, "output_path": str(self.book)},
-            {"tool": "mangapress", "protocol_version": 1, "sequence": 2, "type": "result",
+            {"tool": "mangaprep", "protocol_version": 1, "sequence": 2, "type": "result",
              "status": "completed", "dry_run": False, "written": True, "format": "epub", "profile": "K11",
              "width": 1072, "height": 1448, "output_path": str(self.book), "source_pages": 4,
              "output_pages": 4, "bytes": 4},
@@ -256,7 +256,7 @@ class EventAndFixtureTests(unittest.TestCase):
     def test_bmp_control_requires_its_specific_rejection_not_a_crash_or_success(self):
         book = self.directory / "refused.epub"
         explanation = "BMP pages cannot be embedded in EPUB without processing. Remove --noprocessing or choose CBZ output."
-        error = {"tool": "mangapress", "protocol_version": 1, "sequence": 1, "type": "error",
+        error = {"tool": "mangaprep", "protocol_version": 1, "sequence": 1, "type": "error",
                  "code": "page_processing_failed", "stage": "process", "severity": "error", "diagnostic": explanation}
         cases.verify_bmp_rejection(1, json.dumps(error), explanation, book)
         for status, stdout, stderr in ((0, json.dumps(error), explanation),

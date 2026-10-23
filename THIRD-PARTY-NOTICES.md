@@ -1,6 +1,6 @@
 # Third-party notices
 
-mangapress itself is licensed under MIT or Apache-2.0, at your option ([LICENSE-MIT](LICENSE-MIT),
+mangaprep itself is licensed under MIT or Apache-2.0, at your option ([LICENSE-MIT](LICENSE-MIT),
 [LICENSE-APACHE](LICENSE-APACHE)). It is an independent project: not affiliated with, and not
 endorsed by, KCC, Pillow, or their authors.
 
@@ -20,7 +20,7 @@ included as a conservative superset; development-only dependencies are excluded.
 
 This software is based in part on the work of the Independent JPEG Group.
 
-The JPEG pages and covers mangapress writes are encoded with the
+The JPEG pages and covers mangaprep writes are encoded with the
 [`jpeg-encoder`](https://github.com/vstroebel/jpeg-encoder) crate, whose forward DCT is a port
 of the integer DCT of libjpeg (through mozjpeg). The IJG's license text, which the crate
 carries in the header of that file, is reproduced in `DEPENDENCY-LICENSES.txt` with the
@@ -35,7 +35,7 @@ license, is reproduced in `DEPENDENCY-LICENSES.txt`.
 
 <https://github.com/ciromattia/kcc>
 
-mangapress reproduces the behavior of KCC's conversion pipeline: given the same pages and options,
+mangaprep reproduces the behavior of KCC's conversion pipeline: given the same pages and options,
 the same book. It does so by reimplementing what KCC does, not by including KCC's code — see
 [docs/adr/0007-gplv3-boundary-kcc-image-rs.md](docs/adr/0007-gplv3-boundary-kcc-image-rs.md) and
 [docs/adr/0013-follow-a-named-kcc-release.md](docs/adr/0013-follow-a-named-kcc-release.md).
@@ -69,7 +69,7 @@ PERFORMANCE OF THIS SOFTWARE.
 ```
 
 Two of KCC's files, `image.py` and `dualmetafix.py`, are under the GNU General Public License,
-version 3 or later, instead. mangapress contains no code and no comments from them. What
+version 3 or later, instead. mangaprep contains no code and no comments from them. What
 `image.py` does is reimplemented from its behavior, and the device table carries the same facts
 about each device (its name, screen resolution and gray levels).
 
@@ -78,7 +78,7 @@ about each device (its name, screen resolution and gray levels).
 <https://github.com/python-pillow/Pillow>
 
 KCC does its image work through Pillow, so "the same pages as KCC" means Pillow's arithmetic.
-mangapress's resampler (`crates/mangapress-core/src/resample.rs`), its palette dither
+mangaprep's resampler (`crates/mangaprep-core/src/resample.rs`), its palette dither
 (`quantize.rs`) and its color conversions (`color.rs`) are written to give Pillow's results bit
 for bit, and follow the way Pillow computes them. Pillow's notice is:
 

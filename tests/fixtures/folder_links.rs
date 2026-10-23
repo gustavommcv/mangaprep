@@ -49,9 +49,9 @@ pub fn directory_link(target: &Path, link: &Path) -> std::io::Result<()> {
 pub fn junction(target: &Path, link: &Path) {
     let output = std::process::Command::new("powershell.exe")
         .args(["-NoProfile", "-NonInteractive", "-Command",
-            "New-Item -ItemType Junction -Path $env:MANGAPRESS_TEST_JUNCTION_LINK -Target $env:MANGAPRESS_TEST_JUNCTION_TARGET -ErrorAction Stop | Out-Null"])
-        .env("MANGAPRESS_TEST_JUNCTION_LINK", link)
-        .env("MANGAPRESS_TEST_JUNCTION_TARGET", target)
+            "New-Item -ItemType Junction -Path $env:MANGAPREP_TEST_JUNCTION_LINK -Target $env:MANGAPREP_TEST_JUNCTION_TARGET -ErrorAction Stop | Out-Null"])
+        .env("MANGAPREP_TEST_JUNCTION_LINK", link)
+        .env("MANGAPREP_TEST_JUNCTION_TARGET", target)
         .output().unwrap();
     assert!(
         output.status.success(),

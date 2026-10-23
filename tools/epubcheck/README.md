@@ -3,7 +3,7 @@
 This development-only gate builds the CLI, generates small synthetic books, and runs the
 official [EPUBCheck 5.4.0](https://github.com/w3c/epubcheck/releases/tag/v5.4.0) on each complete
 archive. It is independent of KCC and supplements Rust tests and parity comparisons.
-Java and Python are not mangapress runtime dependencies; `cargo test` still needs neither.
+Java and Python are not mangaprep runtime dependencies; `cargo test` still needs neither.
 
 ## Run locally
 

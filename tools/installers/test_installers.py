@@ -18,8 +18,8 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-REPO_URL = "https://github.com/gustavommcv/mangapress"
-LATEST_API = "https://api.github.com/repos/gustavommcv/mangapress/releases/latest"
+REPO_URL = "https://github.com/gustavommcv/mangaprep"
+LATEST_API = "https://api.github.com/repos/gustavommcv/mangaprep/releases/latest"
 NOTICES = ("LICENSE-MIT", "LICENSE-APACHE", "THIRD-PARTY-NOTICES.md", "DEPENDENCY-LICENSES.txt")
 WINDOWS = os.name == "nt"
 
@@ -29,7 +29,7 @@ class InstallerCases:
 
     @classmethod
     def setUpClass(cls):
-        cls.executable_name = "mangapress.exe" if WINDOWS else "mangapress"
+        cls.executable_name = "mangaprep.exe" if WINDOWS else "mangaprep"
         cls.binary = ROOT / "target/debug" / cls.executable_name
         if not cls.binary.is_file():
             raise RuntimeError("Build the CLI with cargo build --workspace --locked first")
@@ -45,10 +45,10 @@ class InstallerCases:
             cls.target = arch + "-apple-darwin"
         else:
             cls.target = "x86_64-unknown-linux-musl"
-        cls.asset_name = f"mangapress-{cls.target}" + (".zip" if WINDOWS else ".tar.gz")
+        cls.asset_name = f"mangaprep-{cls.target}" + (".zip" if WINDOWS else ".tar.gz")
 
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="mangapress-installer-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="mangaprep-installer-")
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name)
         self.install_dir = self.directory / "install space ação [books]"
@@ -75,10 +75,10 @@ class InstallerCases:
             },
         }
         self.environment = dict(os.environ)
-        self.environment.pop("MANGAPRESS_VERSION", None)
+        self.environment.pop("MANGAPREP_VERSION", None)
         self.environment.update({
-            "MANGAPRESS_INSTALL_DIR": str(self.install_dir),
-            "MANGAPRESS_NO_PATH_UPDATE": "1",
+            "MANGAPREP_INSTALL_DIR": str(self.install_dir),
+            "MANGAPREP_NO_PATH_UPDATE": "1",
             "INSTALLER_CATALOG": str(self.catalog_file),
             "TMPDIR": str(self.stage_root),
             "TEMP": str(self.stage_root),
@@ -107,7 +107,7 @@ class InstallerCases:
 
     @property
     def license_dir(self):
-        return self.install_dir if WINDOWS else self.install_dir / "mangapress-licenses"
+        return self.install_dir if WINDOWS else self.install_dir / "mangaprep-licenses"
 
     def make_archive(self, include_binary=True):
         files = dict(self.notices)
@@ -144,7 +144,7 @@ class InstallerCases:
         self.assertEqual((self.install_dir / self.executable_name).read_bytes(), self.binary.read_bytes())
         for name, content in self.notices.items():
             self.assertEqual((self.license_dir / name).read_bytes(), content)
-        self.assertIn("mangapress " + self.version, result.stdout)
+        self.assertIn("mangaprep " + self.version, result.stdout)
 
     def assert_failed_without_replacing(self, message=None):
         self.install_dir.mkdir(exist_ok=True)
@@ -167,7 +167,7 @@ class InstallerCases:
                                           self.base_url + "/" + self.asset_name])
 
     def test_specific_version_bypasses_latest(self):
-        self.environment["MANGAPRESS_VERSION"] = self.tag
+        self.environment["MANGAPREP_VERSION"] = self.tag
         self.catalog["latest_tag"] = "v99.0.0"
         self.catalog["latest_redirect"] = REPO_URL + "/releases/tag/v99.0.0"
         self.assert_installed(self.run_installer())
@@ -175,14 +175,14 @@ class InstallerCases:
                                           self.base_url + "/" + self.asset_name])
 
     def test_version_without_prefix_is_normalized(self):
-        self.environment["MANGAPRESS_VERSION"] = self.version
+        self.environment["MANGAPREP_VERSION"] = self.version
         self.assert_installed(self.run_installer())
         self.assertEqual(len(self.requests()), 2)
 
     def test_invalid_version_is_rejected_before_downloads(self):
         for version in ("../main", "--help", "v1.2.3/other", "v1.2.3\nother", "V1.2.3", "v1.2", " "):
             with self.subTest(version=version):
-                self.environment["MANGAPRESS_VERSION"] = version
+                self.environment["MANGAPREP_VERSION"] = version
                 self.assert_failed_without_replacing("invalid release version")
                 self.assertEqual(self.requests(), [])
 
@@ -237,7 +237,7 @@ class InstallerCases:
     def test_binary_version_must_match_the_selected_tag(self):
         tag = "v99.0.0"
         base = f"{REPO_URL}/releases/download/{tag}"
-        self.environment["MANGAPRESS_VERSION"] = tag
+        self.environment["MANGAPREP_VERSION"] = tag
         self.catalog["files"] = {base + "/checksums.txt": str(self.checksums),
                                  base + "/" + self.asset_name: str(self.archive)}
         self.assert_failed_without_replacing("does not match")
