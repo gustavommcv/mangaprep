@@ -197,6 +197,7 @@ pub static PROFILES: &[Profile] = &[
         1696,
         Palette::Gray16
     ),
+    profile!("K1920", "Kindle 1440x1920", 1440, 1920, Palette::Gray16),
     profile!("KS1860", "Kindle 1860", 1860, 1920, Palette::Gray16),
     profile!("KS1920", "Kindle 1920", 1920, 1920, Palette::Gray16),
     profile!("KS1240", "Kindle 1240", 1240, 1860, Palette::Gray16),

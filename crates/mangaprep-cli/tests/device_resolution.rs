@@ -5,6 +5,47 @@ use std::process::Command;
 use support::{binary, fixture_folder, parse_events, write_png};
 
 #[test]
+fn kindle_1440_profile_is_listed_and_plans_a_native_size_cbz() {
+    let listing = Command::new(binary())
+        .args(["--list-profiles", "--json-events"])
+        .output()
+        .unwrap();
+    assert!(listing.status.success());
+    let profiles = parse_events(&listing);
+    let profile = profiles
+        .iter()
+        .find(|event| event["code"] == "K1920")
+        .unwrap();
+    assert_eq!(profile["width"], 1440);
+    assert_eq!(profile["height"], 1920);
+
+    let fixture = fixture_folder();
+    let destination = tempfile::tempdir().unwrap();
+    let output = Command::new(binary())
+        .arg(fixture.path())
+        .args([
+            "--profile",
+            "K1920",
+            "--dry-run",
+            "--json-events",
+            "--output",
+        ])
+        .arg(destination.path())
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let events = parse_events(&output);
+    let result = events.last().unwrap();
+    assert_eq!(result["format"], "cbz");
+    assert_eq!(result["width"], 1440);
+    assert_eq!(result["height"], 1920);
+}
+
+#[test]
 fn kindle_dx_plan_and_packaged_pages_use_the_same_format_specific_target() {
     let fixture = fixture_folder();
     for (args, expected) in [
