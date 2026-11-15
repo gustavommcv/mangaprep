@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "mangaprep-cli"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -690,7 +690,7 @@ dependencies = [
 
 [[package]]
 name = "mangaprep-core"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "image",
  "jpeg-encoder",

@@ -21,6 +21,13 @@ the release tag to exist. From 0.9.0, the executable, archives and installer var
 Earlier releases keep their original names. Release notes and reader-test records below
 retain the names used by the versions they describe.
 
+## 0.9.1
+
+Adds **Kindle 1440x1920** (`--profile K1920`) from [KCC 12.1.5](https://github.com/ciromattia/kcc/pull/1496).
+The profile uses 16 gray levels and selects CBZ with `--format auto`. The existing profiles and
+machine protocol version 1 retain their behavior. KCC 12.1.1 remains the reference for the existing
+comparison suite.
+
 ## 0.9.0
 
 This is the first release named **mangaprep**, formerly mangapress. It follows KCC 12.1.1,
